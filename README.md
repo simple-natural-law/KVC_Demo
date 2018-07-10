@@ -36,7 +36,7 @@
 这样虽然直接，但是缺乏灵活性。另一方面，兼容键值编码的对象提供了使用字符串标识符访问对象属性的更通用机制。
 
 
-### 使用键（Key）和键路径（Key Path）标识对象的属性
+#### 使用键（Key）和键路径（Key Path）标识对象的属性
 
 键是标识特定属性的字符串。按照惯例，表示属性的键是代码中显示的属性本身的名称。键必须使用ASCII编码，不能包含空格，并且通常以小写字母开头（尽管有例外，例如在许多类中找到的URL属性）。
 
@@ -50,7 +50,7 @@
 
 例如，假设`Person`和`Address`类也兼容键值编码，那么应用于`myAccount`实例的键路径`owner.address.street`指的是存储在银行帐户所有者地址中的街道字符串的值。
 
-### 使用键获取属性值
+#### 使用键获取属性值
 
 当对象遵循`NSKeyValueCoding`协议时，其是兼容键值编码的。继承自`NSObject`（其提供了`NSKeyValueCoding`协议的必要方法的默认实现）的对象会自动采用此协议的某些默认行为。这样的对象至少实现了以下基础的基于键的getter：
 - `valueForKey:`：返回接收者的与指定键对应的属性的值。如果根据[访问器搜索模式](#turn)中描述的规则无法找到key所指定的属性，则该对象会向自身发送`valueForUndefinedKey:`消息。`valueForUndefinedKey:`方法的默认实现会抛出一个`NSUndefinedKeyException`，但是子类可以覆盖此行为并更优雅地处理该情况。
@@ -62,7 +62,7 @@
 当使用键路径来寻址属性时，如果键路径中的最后一个键的前一个键是to-many relationship（即它引用一个集合），则返回的值是一个包含前一个键对应集合中的每个值的对应最后一个键的值的集合。例如，请求键路径`transactions.payee`会返回一个包含所有`Transaction`对象的`payee`实例的数组。这也适用于键路径中的多个数组。例如，键路径`accounts.transactions.payee`返回一个包含所有账户中所有交易的所有收款人对象的数组。
 
 
-### 使用键设置属性值
+#### 使用键设置属性值
 
 与getter一样，兼容键值编码的对象也提供了一小组具有默认行为的通用setter：
 - `setValue:forKey:`：将消息接收者的与指定键对应的属性设置为给定值。`setValue:forKey:`方法的默认实现自动解包表示标量和结构体的`NSNumber`和`NSValue`对象，并将它们分配给属性。有关包装和解包语义的详细信息，请参看[表示非对象值](#turn)。如果消息接收对象没有指定的键对应的属性，则该对象会向自身发送`setValue:forUndefinedKey:`消息。`setValue:forUndefinedKey:`方法的默认实现抛出一个`NSUndefinedKeyException`。但是，子类可以重写此方法以自定义方式处理请求。
@@ -72,7 +72,26 @@
 在默认实现中，当试图将非对象属性设置为`nil`时，兼容键值编码的对象会向自身发送`setNilValueForKey:`方法。`setNilValueForKey:`方法的默认实现抛出一个`NSInvalidArgumentException`，但是对象可能会覆盖此行为以替换默认值或标记值，如[处理非对象值](#turn)中所述。
 
 
+#### 使用键简化对象访问
 
+要了解基于键的getter和setter如何简化代码，请考虑以下示例。 在macOS中，`NSTableView`和`NSOutlineView`对象将标识符字符串与其每个列相关联。 如果支持表的模型对象不兼容键值编码，则表的数据源方法将被强制检查每个列标识符来查找要返回的正确属性，如下面代码所示。 此外，当未来向模型添加另一个属性（在本例中`Person`对象）时，还必须重新访问数据源方法，添加另一个条件来测试新属性并返回相关值。
+```
+- (id)tableView:(NSTableView *)tableview objectValueForTableColumn:(id)column row:(NSInteger)row
+{
+    id result = nil;
+    Person *person = [self.people objectAtIndex:row];
+
+    if ([[column identifier] isEqualToString:@"name"]) {
+        result = [person name];
+    } else if ([[column identifier] isEqualToString:@"age"]) {
+        result = @([person age]);  // Wrap age, a scalar, as an NSNumber
+    } else if ([[column identifier] isEqualToString:@"favoriteColor"]) {
+        result = [person favoriteColor];
+    } // And so on...
+
+    return result;
+}
+```
 
 
 
