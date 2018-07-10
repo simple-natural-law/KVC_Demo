@@ -38,9 +38,34 @@
 
 ### 使用键（Key）和键路径（Key Path）标识对象的属性
 
-key是标识特定属性的字符串。按照惯例，代表属性的key是代码中显示的属性本身的名称。key必须使用ASCII编码，可能不包含
+键是标识特定属性的字符串。按照惯例，代表属性的键是代码中显示的属性本身的名称。键必须使用ASCII编码，不能包含空格，并且通常以小写字母开头（尽管有例外，例如在许多类中找到的URL属性）。
+
+由于`BankAccount`类是兼容键值编码的，所以它可以识别键`owner`、`currentBalance`和`transactions`，它们是其属性的名称。可以通过键代替调用`setCurrentBalance:`方法为`currentBalance`属性设置值：
+```
+[myAccount setValue:@(100.0) forKey:@"currentBalance"];
+```
+实际上，可以使用键参数不同的相同方法设置`myAccount`对象的所有属性。因为参数是字符串，所以它可以是在运行时操作的变量。
+
+键路径是一个使用点分割多个键的字符串，用于指定要遍历的对象属性序列。序列中第一个键的属性是相对于接收者的，并且后面的键都是相对于其前面一个键所代表的属性。键路径对于使用单个方法深入到对象层次结构是非常有用的。
+
+例如，假设`Person`和`Address`类也兼容键值编码，那么应用于`myAccount`实例的键路径`owner.address.street`指的是存储在银行帐户所有者地址中的街道字符串的值。
+
+### 使用键获取属性值
+
+当对象遵循`NSKeyValueCoding`协议时，其是兼容键值编码的。继承自`NSObject`（其提供了`NSKeyValueCoding`协议的必要方法的默认实现）的对象会自动采用此协议的某些默认行为。这样的对象至少实现了以下基础的基于键的getter：
+- `valueForKey:`：返回key参数指定的属性的值。如果根据[访问器搜索模式](#turn)中描述的规则无法找到key所指定的属性，则该对象会向自身发送`valueForUndefinedKey:`消息。`valueForUndefinedKey:`方法的默认实现会抛出一个`NSUndefinedKeyException`，但是子类可以覆盖此行为并更优雅地处理该情况。
+- `valueForKeyPath:`：返回相对于接收方的指定键路径的值。键路径序列中的任一对象不能兼容特定键的键值编码——即其`valueForKey:`方法的默认实现无法找到访问器方法——会接收到一个`valueForUndefinedKey:`消息。
+- `dictionaryWithValuesForKeys:`：返回相对于接收者的键数组的值。该方法为数组中的每个键调用`valueForKey:`方法，返回的`NSDictionary`包含数组中所有键的值。
+
+> **注意**：集合对象（如`NSArray`，`NSDictionary`和`NSSet`）不能包含`nil`作为值。相反，可以使用`NSNull`对象来表示`nil`值，`NSNull`提供了一个实例来表示对象属性的`nil`值。`dictionaryWithValuesForKeys:`方法和相关的`setValuesForKeysWithDictionary:`方法的默认实现自动在`NSNull`（在字典参数中）和`nil`（在存储属性中）之间进行转换。
+
+当使用键路径来寻址属性时，如果键路径中的最后一个键的前一个键是to-many relationship（即它引用一个集合），则返回的值是一个包含前一个键对应集合中的每个值的对应最后一个键的值的集合。例如，请求键路径`transactions.payee`会返回一个包含所有`Transaction`对象的`payee`实例的数组。这也适用于键路径中的多个数组。例如，键路径`accounts.transactions.payee`返回一个包含所有账户中所有交易的所有收款人对象的数组。
 
 
+### 使用键设置属性值
+
+与getter一样，兼容键值编码的对象也提供了一小组具有默认行为的通用setter：
+- 
 
 
 
