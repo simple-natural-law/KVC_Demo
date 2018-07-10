@@ -38,7 +38,7 @@
 
 ### 使用键（Key）和键路径（Key Path）标识对象的属性
 
-键是标识特定属性的字符串。按照惯例，代表属性的键是代码中显示的属性本身的名称。键必须使用ASCII编码，不能包含空格，并且通常以小写字母开头（尽管有例外，例如在许多类中找到的URL属性）。
+键是标识特定属性的字符串。按照惯例，表示属性的键是代码中显示的属性本身的名称。键必须使用ASCII编码，不能包含空格，并且通常以小写字母开头（尽管有例外，例如在许多类中找到的URL属性）。
 
 由于`BankAccount`类是兼容键值编码的，所以它可以识别键`owner`、`currentBalance`和`transactions`，它们是其属性的名称。可以通过键代替调用`setCurrentBalance:`方法为`currentBalance`属性设置值：
 ```
@@ -46,16 +46,16 @@
 ```
 实际上，可以使用键参数不同的相同方法设置`myAccount`对象的所有属性。因为参数是字符串，所以它是可以在运行时操作的变量。
 
-键路径是一个使用点分割多个键的字符串，用于指定要遍历的对象属性序列。序列中第一个键的属性是相对于接收者的，并且后面的键都是相对于其前面一个键所代表的属性。键路径对于使用单个方法深入到对象层次结构是非常有用的。
+键路径是一个使用点分割多个键的字符串，用于指定要遍历的对象属性序列。序列中第一个键的属性是相对于接收者的，并且后面的键都是相对于其前面一个键所表示的属性。键路径对于使用单个方法深入到对象层次结构是非常有用的。
 
 例如，假设`Person`和`Address`类也兼容键值编码，那么应用于`myAccount`实例的键路径`owner.address.street`指的是存储在银行帐户所有者地址中的街道字符串的值。
 
 ### 使用键获取属性值
 
 当对象遵循`NSKeyValueCoding`协议时，其是兼容键值编码的。继承自`NSObject`（其提供了`NSKeyValueCoding`协议的必要方法的默认实现）的对象会自动采用此协议的某些默认行为。这样的对象至少实现了以下基础的基于键的getter：
-- `valueForKey:`：返回key参数指定的属性的值。如果根据[访问器搜索模式](#turn)中描述的规则无法找到key所指定的属性，则该对象会向自身发送`valueForUndefinedKey:`消息。`valueForUndefinedKey:`方法的默认实现会抛出一个`NSUndefinedKeyException`，但是子类可以覆盖此行为并更优雅地处理该情况。
-- `valueForKeyPath:`：返回相对于接收方的指定键路径的值。键路径序列中的任一对象不能兼容特定键的键值编码——即其`valueForKey:`方法的默认实现无法找到访问器方法——会接收到一个`valueForUndefinedKey:`消息。
-- `dictionaryWithValuesForKeys:`：返回相对于接收者的键数组的值。该方法为数组中的每个键调用`valueForKey:`方法，返回的`NSDictionary`包含数组中所有键的值。
+- `valueForKey:`：返回接收者的与指定键对应的属性的值。如果根据[访问器搜索模式](#turn)中描述的规则无法找到key所指定的属性，则该对象会向自身发送`valueForUndefinedKey:`消息。`valueForUndefinedKey:`方法的默认实现会抛出一个`NSUndefinedKeyException`，但是子类可以覆盖此行为并更优雅地处理该情况。
+- `valueForKeyPath:`：返回相对于接收者的指定键路径对应的属性的值。键路径序列中的任一对象不能兼容特定键的键值编码——即其`valueForKey:`方法的默认实现无法找到访问器方法——该对象会接收到一个`valueForUndefinedKey:`消息。
+- `dictionaryWithValuesForKeys:`：返回接收者的与键数组中每个键对应的属性的值。该方法为数组中的每个键调用`valueForKey:`方法，返回的`NSDictionary`包含数组中所有键的值。
 
 > **注意**：集合对象（如`NSArray`，`NSDictionary`和`NSSet`）不能包含`nil`作为值。相反，可以使用`NSNull`对象来表示`nil`值，`NSNull`提供了一个实例来表示对象属性的`nil`值。`dictionaryWithValuesForKeys:`方法和相关的`setValuesForKeysWithDictionary:`方法的默认实现自动在`NSNull`（在字典参数中）和`nil`（在存储属性中）之间进行转换。
 
@@ -65,11 +65,11 @@
 ### 使用键设置属性值
 
 与getter一样，兼容键值编码的对象也提供了一小组具有默认行为的通用setter：
-- 
+- `setValue:forKey:`：将消息接收者的与指定键对应的属性设置为给定值。`setValue:forKey:`方法的默认实现自动解包表示标量和结构体的`NSNumber`和`NSValue`对象，并将它们分配给属性。有关包装和解包语义的详细信息，请参看[表示非对象值](#turn)。如果消息接收对象没有指定的键对应的属性，则该对象会向自身发送`setValue:forUndefinedKey:`消息。`setValue:forUndefinedKey:`方法的默认实现抛出一个`NSUndefinedKeyException`。但是，子类可以重写此方法以自定义方式处理请求。
+- `setValue:forKeyPath:`：将相对于接收者的指定键路径对应的属性设置为给定值。键路径序列中的任何一个不兼容兼职编码的对象会收到`setValue:forUndefinedKey:`消息。
+- `setValuesForKeysWithDictionary:`：使用字典键标识属性，使用字典中的设置属性的值。其默认实现会为每个键值对调用`setValue:forKey:`方法，并根据需要使用`nil`替换`NSNull`对象。
 
-
-
-
+在默认实现中，当试图将非对象属性设置为`nil`时，兼容键值编码的对象会向自身发送`setNilValueForKey:`方法。`setNilValueForKey:`方法的默认实现抛出一个`NSInvalidArgumentException`，但是对象可能会覆盖此行为以替换默认值或标记值，如[处理非对象值](#turn)中所述。
 
 
 
