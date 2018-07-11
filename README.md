@@ -140,7 +140,7 @@
 
 @end
 ```
-为了讨论，假设现在有一个`BankAccount`实例有一个填充了下表所示数据的transactions数组。
+为了讨论，假设现在有一个`BankAccount`实例有一个填充了下表所示数据的`transactions`数组。
 
 | payee values | amount values formatted as currency | date values formatted as month day, year |
 |-----------------|--------------------------------------------|-------------------------------------------------|
@@ -160,6 +160,56 @@
 
 #### 聚合运算符
 
+聚合运算符可以处理数组或者属性集，生成反映集合的某些方面的单个值。
 
+##### @avg
+
+当指定`@avg`运算符时，`valueForKeyPath:`方法会读取集合中每个元素的右键路径指定的属性，将其转换为`double`（用0替换`nil`值），并计算这些值的算数平均值，然后将结果存储在一个`NSNumber`实例中并返回该结果。
+
+获取样本数据的平均交易金额：
+```
+NSNumber *transactionAverage = [self.transactions valueForKeyPath:@"@avg.amount"];
+```
+`transactionAverage`的格式化结果为$456.54。
+
+##### @count
+
+当指定`@count`运算符时，`valueForKeyPath:`方法使用一个`NSNumber`实例来返回集合中的对象数量。右键路径（如果存在）将被忽略。
+
+获取`transactions`数组中`Transaction`对象的数量：
+```
+NSNumber *numberOfTransactions = [self.transactions valueForKeyPath:@"@count"];
+```
+`numberOfTransactions`的值是13。
+
+##### @max
+
+当指定`@max`运算符时，`valueForKeyPath:`方法搜索右键路径指定的集合元素的属性，并返回值最大的一个。搜索时使用`compare:`方法进行比较，许多Foundation类定义了该方法，例如`NSNumber`类。**因此，右键路径标识的属性必须持有一个能够对`compare:`消息进行响应的对象**。搜索会忽略值为`nil`的属性。
+
+获取样本数据中`Transaction`对象的`date`属性的最大值：
+```
+NSDate *latestDate = [self.transactions valueForKeyPath:@"@max.date"];
+```
+`latestDate`的格式化值为Jul 15, 2016。
+
+##### @min
+
+当指定`@min`运算符时，`valueForKeyPath:`方法搜索右键路径指定的集合元素的属性，并返回值最小的一个。搜索时使用`compare:`方法进行比较，许多Foundation类定义了该方法，例如`NSNumber`类。**因此，右键路径标识的属性必须持有一个能够对`compare:`消息进行响应的对象**。搜索会忽略值为`nil`的属性。
+
+获取样本数据中`Transaction`对象的`date`属性值的最小值：
+```
+NSDate *earliestDate = [self.transactions valueForKeyPath:@"@min.date"];
+```
+`earliestDate`的格式化值为Dec 1, 2015。
+
+##### @sum
+
+当指定`@sum`运算符时，`valueForKeyPath:`方法读取集合中每个元素的右键路径指定的属性，将其转换为`double`（用0替换`nil`值），并计算这些值的总和，然后将结果存储在一个`NSNumber`实例中并返回该结果。
+
+获取样本数据的交易总金额：
+```
+NSNumber *amountSum = [self.transactions valueForKeyPath:@"@sum.amount"];
+```
+`amountSum`的格式化结果为$5,935.00。
 
 
