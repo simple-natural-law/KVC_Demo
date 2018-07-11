@@ -212,4 +212,18 @@ NSNumber *amountSum = [self.transactions valueForKeyPath:@"@sum.amount"];
 ```
 `amountSum`的格式化结果为$5,935.00。
 
+#### 数组运算符
 
+数组运算符会使得`valueForKeyPath:`方法返回一个与右键路径标识的特定对象集对应的对象数组。
+
+> **重要**：如果使用数组运算符时，任何叶对象为`nil`，`valueForKeyPath:`方法会引发异常。
+
+##### @distinctUnionOfObjects
+
+当指定`@distinctUnionOfObjects`运算符时，`valueForKeyPath:`方法创建并返回一个数组，该数组包含集合中元素的右键路径标识的属性的值，并且这些值互不相同。
+
+获取样本数据中`transactions`数组中`Transaction`对象的`payee`属性的值的集合（同一个集合内，任何两个元素均是不同的）：
+```
+NSArray *distinctPayees = [self.transactions valueForKeyPath:@"@distinctUnionOfObjects.payee"];
+```
+生成的`distinctPayees`数组包含Car Loan，General Cable，Animal Hospital，Green Power，Mortgage。
