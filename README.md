@@ -110,17 +110,55 @@
 - `mutableSetValueForKey:`和`mutableSetValueForKeyPath:`：它们返回一个代理对象，其行为类似于`NSMutableSet`对象。
 - `mutableOrderedSetValueForKey:`和`mutableOrderedSetValueForKeyPath:`：它们返回一个代理对象，其行为类似于`NSMutableOrderedSet`对象。
 
+当对代理对象执行向其添加对象和从中删除或者替换对象的操作时，协议的默认实现会相应地修改集合对象的下层属性。这比使用`valueForKey:`方法获取不可变的集合对象，根据该集合对象创建一个包含已修改的内容的集合对象，然后使用`setValue:forKey:`方法将其存储回对象更加有效。在许多情况下，它也比直接使用可变属性更有效。这些方法为集合对象中保存的对象提供了保持KVO兼容的额外好处（有关详细信息，请参看[KVO键值观察（Key-Value Observing）](https://www.jianshu.com/p/ab5a36728dfc)）。
 
 
+### 使用集合运算符
 
+当向兼容键值编码的对象发送`valueForKeyPath:`消息时，可以在键路径中嵌入一个集合运算符。集合运算符是一个开头是`@`符号的关键字，它告知getter在返回之前应该以某种方式操作数据。`NSObject`提供的`valueForKeyPath:`方法的默认实现实现了这种行为。
 
+当键路径包含一个集合运算符时，在运算符之前的键路径部分（成为左键路径）表示`valueForKeyPath`消息的接收者对象的集合。如果将消息直接发送给集合对象（例如`NSArray`实例），则略去左键路径。
 
+运算符之后的键路径部分（称为右键路径）指定运算符要操作的集合的属性。除`@count`之外的所有集合运算符都需要右键路径。下图说明了运算符键路径格式。
 
+![图2-1 运算符键路径格式.png](http://upload-images.jianshu.io/upload_images/4906302-dd3441509bc3aa8c.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
+集合运算符表现出三种基本类型的行为：
+- 聚合运算符以某种方式合并集合中的对象，并返回与右键路径中指定的属性的数据类型相匹配的单个对象。`@count`运算符是一个例外，其没有右键路径，并总是返回一个`NSNumber`实例。
+- 数组运算符返回一个包含指定的集合中所保存对象的子集的`NSArray`实例。
+- 嵌套运算符处理包含其他集合的集合，并返回一个`NSArray`或者`NSSet`实例，具体取决于运算符，它以某种方式合并嵌套集合中的对象。
 
+#### 样本数据
 
+以下描述包括演示如何调用每个运算符的代码片段，以及执行此运算的结果。它们依赖于上文提到的`BankAccount`类，它包含一个含有`Transaction`对象的数组。每个`Transaction`对象代表一个简单的支票簿条目，如下所示。
+```
+@interface Transaction : NSObject
 
+@property (nonatomic) NSString* payee;   // To whom
+@property (nonatomic) NSNumber* amount;  // How much
+@property (nonatomic) NSDate* date;      // When
 
+@end
+```
+为了讨论，假设现在有一个`BankAccount`实例有一个填充了下表所示数据的transactions数组。
+
+| payee values | amount values formatted as currency | date values formatted as month day, year |
+|-----------------|--------------------------------------------|-------------------------------------------------|
+| Green Power | $120.00 | Dec 1, 2015 |
+| Green Power | $150.00 | Jan 1, 2016 |
+| Green Power | $170.00 | Feb 1, 2016 |
+| Car Loan | $250.00 | Jan 15, 2016 |
+| Car Loan | $250.00 | Feb 15, 2016 |
+| Car Loan | $250.00 | Mar 15, 2016 |
+| General Cable | $120.00 | Dec 1, 2015 |
+| General Cable | $155.00 | Jan 1, 2016 |
+| General Cable | $120.00 | Feb 1, 2016 |
+| Mortgage | $1,250.00 | Jan 15, 2016 |
+| Mortgage | $1,250.00 | Feb 15, 2016 |
+| Mortgage | $1,250.00 | Mar 15, 2016 |
+| Animal Hospital | $600.00 | Jul 15, 2016 |
+
+#### 聚合运算符
 
 
 
