@@ -1,4 +1,4 @@
-# Key-Value Coding（键值编码）
+# KVC键值编码（Key-Value Coding）
 
 
 ## 关于键值编码
@@ -92,7 +92,23 @@
     return result;
 }
 ```
+以下代码显示了相同数据源方法的更简洁的实现，该实现利用了兼容键值编码的`Person`对象。仅使用列标识符作为`valueForKey:`方法的键参数来获取对应的属性值。除了更短之外，它还更通用，因为只要列标识符始终与模型对象的属性名称匹配，它在以后添加新列时将继续保持不变。
+```
+- (id)tableView:(NSTableView *)tableview objectValueForTableColumn:(id)column row:(NSInteger)row
+{
+    return [[self.people objectAtIndex:row] valueForKey:[column identifier]];
+}
+```
 
+
+### 访问集合属性
+
+兼容键值编码的对象以与公开其他类型属性相同的方式公开其To-many relationships类型的属性。可以使用`valueForKey:`和`setValue:forKey:`方法来获取和设置集合对象，就像任何其他对象一样。但是，当想要操纵这些集合的内容时，使用协议定义的可变代理方法通常是最有效的。
+
+该协议为访问集合对象定义了三种不同的代理方法，每种方法都有一个键和键路径参数：
+- `mutableArrayValueForKey:`和`mutableArrayValueForKeyPath:`：它们返回一个代理对象，其行为类似于`NSMutableArray`对象。
+- `mutableSetValueForKey:`和`mutableSetValueForKeyPath:`：它们返回一个代理对象，其行为类似于`NSMutableSet`对象。
+- `mutableOrderedSetValueForKey:`和`mutableOrderedSetValueForKeyPath:`：它们返回一个代理对象，其行为类似于`NSMutableOrderedSet`对象。
 
 
 
