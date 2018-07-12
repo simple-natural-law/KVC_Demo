@@ -240,4 +240,50 @@ NSArray *payees = [self.transactions valueForKeyPath:@"@unionOfObjects.payee"];
 
 #### 嵌套运算符
 
+嵌套运算符对嵌套集合进行操作，该集合的每个条目都包含一个集合。
+
+> **重要**：如果使用嵌套运算符时，任何叶对象为`nil`，`valueForKeyPath:`方法会引发异常。
+
+为方便描述，假设存在填充了以下数据的被称为`moreTransactions`的第二个数据数组，并于上文中起始的`transactions`数组一起收集到一个嵌套数组中：
+```
+NSArray* moreTransactions = @[transactionData];
+NSArray* arrayOfArrays = @[self.transactions, moreTransactions];
+```
+
+| payee values | amount values formatted as currency | date values formatted as month day, year |
+|-----------------|--------------------------------------------|-------------------------------------------------|
+| General Cable - Cottage | $120.00 | Dec 18, 2015 |
+| General Cable - Cottage | $155.00 | Jan 9, 2016 |
+| General Cable - Cottage | $120.00 | Dec 1, 2016 |
+| Second Mortgage | $1,250.00 | Nov 15, 2016 |
+| Second Mortgage | $1,250.00 | Sep 20, 2016 |
+| Second Mortgage | $1,250.00 | Feb 12, 2016 |
+| Hobby Shop | $600.00 | Jul 14, 2016 |
+
+##### @distinctUnionOfArrays
+
+当指定`@distinctUnionOfArrays`运算符时，`valueForKeyPath:`方法创建并返回一个数组，该数组包含与右键路径标识的属性对应的所有集合的组合的不同（删除重复项）对象。
+
+获取`arrayOfArrays`数组中的所有数组中的`payee`属性的不同值：
+```
+NSArray *collectedDistinctPayees = [arrayOfArrays valueForKeyPath:@"@distinctUnionOfArrays.payee"];
+```
+生成的`collectedDistinctPayees`数组包含Hobby Shop，Mortgage，Animal Hospital，Second Mortgage，Car Loan，General Cable - Cottage，General Cable，Green Power。
+
+##### @unionOfArrays
+
+当指定`@unionOfArrays`运算符时，`valueForKeyPath:`方法创建并返回一个数组，该数组包含与右键路径标识的属性对应的所有集合的组合的所有（不会删除重复项）对象。
+
+获取`arrayOfArrays`数组中的所有数组中的`payee`属性的所有值：
+```
+NSArray *collectedPayees = [arrayOfArrays valueForKeyPath:@"@unionOfArrays.payee"];
+```
+生成的`collectedPayees`数组包含Green Power，Green Power，Green Power，Car Loan，Car Loan，Car Loan，General Cable，General Cable，General Cable，Mortgage，Mortgage，Mortgage，Animal Hospital，General Cable - Cottage，General Cable - Cottage，General Cable - Cottage，Second Mortgage，Second Mortgage，Second Mortgage，Hobby Shop。
+
+##### @distinctUnionOfSets
+
+当指定`@distinctUnionOfSets`运算符时，`valueForKeyPath:`方法创建并返回一个`NSSet`对象，该对象包含与右键路径标识的属性对应的所有集合的组合的不同对象。
+
+此运算符的行为与`@distinctUnionOfArrays`类似，不同之处在于它需要一个`NSSet`实例，该实例包含的也是`NSSet`实例，而不是一个包含`NSArray`实例的`NSArray`实例。 此外，它返回的也是一个`NSSet`实例。 假设示例数据已存储在集合而不是数组中，示例调用和结果与`@distinctUnionOfArrays`显示的相同。
+
 
