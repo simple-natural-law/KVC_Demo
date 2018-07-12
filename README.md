@@ -313,3 +313,48 @@ NSArray *collectedPayees = [arrayOfArrays valueForKeyPath:@"@unionOfArrays.payee
 | unsigned long | numberWithUnsignedLong: | unsignedLong |
 | unsigned long long | numberWithUnsignedLongLong: | unsignedLongLong |
 | unsigned short | numberWithUnsignedShort: | unsignedShort |
+
+> **注意**：在macOS中，由于历史原因，`BOOL`被定义为`signed char`类型，而KVC不会区分这点。因此，当key所标识的属性为`BOOL`类型时，不应该传递诸如`@"ture"`和`@"YES"`这样的字符串作为value给`setValue:forKey:`方法。否则，由于`BOOL`为`char`类型，KVC将尝试调用`charValue`方法，但`NSString`没有实现此方法，这会导致运行时错误。取而代之的是，传递一个`NSNumber`对象，例如`@(1)`或者`@(YES)`，作为`setValue:forKey:`的value参数。此限制不适用于iOS，iOS中的`BOOL`被定义为`bool`类型，而KVC调用`boolValue`方法，该方法适用于`NSNumber`对象或格式正确的`NSString`对象。
+
+### 包装和解包结构体
+
+下表显示了默认访问器用于包装和解包常见的`NSPoint`、`NSRange`、`NSRect`和`NSSize`结构体的创建方法和访问器方法。
+
+| Data type | Creation method | Accessor method |
+|------------|---------------------|----------------------|
+| NSPoint | valueWithPoint: | pointValue |
+| NSRange | valueWithRange: | rangeValue |
+| NSRect | valueWithRect: (macOS only). | rectValue |
+| NSSize | valueWithSize: | sizeValue |
+
+自动包装和解包并不只限于`NSPoint`、`NSRange`、`NSRect`和`NSSize`，结构体类型可以包装在`NSValue`对象中，如下所示。
+```
+typedef struct {
+float x, y, z;
+} ThreeFloats;
+
+@interface MyClass
+
+@property (nonatomic) ThreeFloats threeFloats;
+
+@end
+```
+使用`MyClass`类的实例时，可以使用键值编码获取`threeFloats`的值：
+```
+NSValue *result = [myClass valueForKey:@"threeFloats"];
+```
+同样，可以使用键值编码设置`threeFloats`的值：
+```
+hreeFloats floats = {1., 2., 3.};
+NSValue* value = [NSValue valueWithBytes:&floats objCType:@encode(ThreeFloats)];
+[myClass setValue:value forKey:@"threeFloats"];
+```
+
+## 验证属性
+
+键值编码协议定义支持属性验证的方法。就像使用基于键的访问器来读取和写入兼容键值编码的对象的属性一样，也可以通过键（或键路径）来验证属性。当调用`validateValue:forKey:error:`方法（`validateValue:forKeyPath:error:`方法）时，协议的默认实现会搜索接收验证消息的对象（或者键路径标识的属性所属对象）来查找方法名称与格式`validate<Key>:error:`相匹配的方法。如果对象没有此类方法，则默认验证成功并且返回`YES`。当存在特定于属性的验证方法时，默认实现将返回调用该方法的结果。
+
+> **注意**：通常尽在Objective-C中使用属性验证。
+
+
+
