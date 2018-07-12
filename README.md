@@ -220,10 +220,24 @@ NSNumber *amountSum = [self.transactions valueForKeyPath:@"@sum.amount"];
 
 ##### @distinctUnionOfObjects
 
-当指定`@distinctUnionOfObjects`运算符时，`valueForKeyPath:`方法创建并返回一个数组，该数组包含集合中元素的右键路径标识的属性的值，并且这些值互不相同。
+当指定`@distinctUnionOfObjects`运算符时，`valueForKeyPath:`方法创建并返回一个数组，该数组包含与右键路径标识的属性对应的集合的不同对象。
 
-获取样本数据中`transactions`数组中`Transaction`对象的`payee`属性的值的集合（同一个集合内，任何两个元素均是不同的）：
+获取样本数据中`transactions`数组中所有`Transaction`对象的**不同的**`payee`属性值的集合：
 ```
 NSArray *distinctPayees = [self.transactions valueForKeyPath:@"@distinctUnionOfObjects.payee"];
 ```
 生成的`distinctPayees`数组包含Car Loan，General Cable，Animal Hospital，Green Power，Mortgage。
+
+##### @unionOfObjects
+
+当指定`@unionOfObjects`运算符时，`valueForKeyPath:`方法创建并返回一个数组，该数组包含与右键路径标识的属性对应的集合中的所有对象。**与`@distinctUnionOfObjects`不同，其不会删除重复的对象**。
+
+获取样本数据中`transactions`数组中所有`Transaction`对象的`payee`属性值的集合：
+```
+NSArray *payees = [self.transactions valueForKeyPath:@"@unionOfObjects.payee"];
+```
+生成的`payees`数组包含Green Power，Green Power，Green Power，Car Loan，Car Loan，Car Loan，General Cable，General Cable，General Cable，Mortgage，Mortgage，Mortgage，Animal Hospital。
+
+#### 嵌套运算符
+
+
