@@ -352,7 +352,7 @@ NSValue* value = [NSValue valueWithBytes:&floats objCType:@encode(ThreeFloats)];
 
 ## 验证属性
 
-键值编码协议定义了支持属性验证的方法。就像使用基于键的访问器来读取和写入兼容键值编码的对象的属性一样，也可以通过键（或键路径）来验证属性。当调用`validateValue:forKey:error:`方法（`validateValue:forKeyPath:error:`方法）时，协议的默认实现会搜索接收验证消息的对象（或者键路径标识的属性所属对象）来查找方法名称与格式`validate<Key>:error:`相匹配的方法。如果对象没有此类方法，则默认验证成功并且返回`YES`。当存在特定于属性的验证方法时，默认实现将返回调用该方法的结果。
+键值编码协议定义了支持属性验证的方法。就像使用基于键的访问器来读取和写入兼容键值编码的对象的属性一样，也可以通过键（或键路径）来验证属性。当调用`validateValue:forKey:error:`方法（或者`validateValue:forKeyPath:error:`方法）时，协议的默认实现会搜索接收验证消息的对象（或者键路径标识的属性所属对象）来查找方法名称与格式`validate<Key>:error:`相匹配的方法。如果对象没有此类方法，则默认验证成功并且返回`YES`。当存在特定于属性的验证方法时，默认实现将返回调用该方法的结果。
 
 > **注意**：仅在Objective-C中使用属性验证。
 
@@ -381,4 +381,15 @@ if (![person validateValue:&name forKey:@"name" error:&error])
 
 ## 访问器搜索方式
 
+`NSObject`提供的`NSKeyValueCoding`协议的默认实现使用明确定义的规则集将基于键的访问器调用映射到对象的属性。这些协议方法使用键参数在其自己的对象实例中搜索访问器，实例变量和遵循某些约定的相关方法。虽然很少需要修改此默认搜索，但了解它的工作方式能够帮助我们跟踪键值编码对象的行为和使我们自己的对象兼容键值编码。
+
+> **注意：本节中的描述使用`<key>`和`<Key>`作为在键值编码协议方法中的键字符串参数的占位符。协议方法将占位符用作二次方法调用或变量名查找的一部分。映射的属性名称取决于占位符。例如，对于getter`<key>`和`is<Key>`，名为`hidden`的属性映射到`hidden`和`isHidden`。**
+
+### Getter的搜索方式
+
+给定一个键参数作为输入，`valueForKey:`的默认实现在接收`valueForKey:`调用的类实例中执行以下过程：
+1. 在实例中按顺序依次搜索与`get<Key>`, `<key>`, `is<Key>`和`_<key>`名称对应的访问器方法。如果存在某个方法，则调用该方法并跳到第5步。否则，继续执行第2步。
+2. 如果没有找到简单的访问器方法，则在实例中搜索与`countOf<Key>`、`objectIn<Key>AtIndex:`（对应于`NSArray`类定义的基本方法）和`<key>AtIndexes:`（对应于`NSArray`的`objectsAtIndexes:`方法）名称相匹配的方法。
+    如果找到第一个方法和其他两个方法中的至少一个，则创建一个响应所有`NSArray`方法的集合代理对象并返回该对象。否则，继续执行第3步。
+    代理对象随后将其接收的任何`NSArray`消息转换为`countOf<Key>`、`objectIn<Key>AtIndex:`和`<key>AtIndexes:`消息的某种组合。如果原始对象还实现了名为`get<Key>:range:`的可选方法，则代理对象也会在适当时使用该方法。实际上，与兼容键值编码的对象一起工作的代理对象允许底层属性的行为就像它是`NSArray`一样，即使它不是。
 
