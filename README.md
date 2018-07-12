@@ -10,9 +10,7 @@
 键值编码是一个基本概念，是许多其他Cocoa技术的基础，例如KVO、Cocoa绑定、Core Data和AppleScript-ability。在某些情况下，键值编码还有助于简化代码。
 
 
-## 键值编码基本原理
-
-### 访问对象属性
+## 访问对象属性
 
 对象通常在其接口声明中指定属性，并且这些属性属于以下几种类别之一：
 - **Attributes**：这些是简单值，例如标量、字符串和或者布尔值。诸如`NSNumber`之类的值对象和诸如`NSColor`之类的其他不可变类型也被视为属性。
@@ -29,14 +27,14 @@
 
 @end
 ```
-为了维护封装，对象通常为其接口上的属性提供访问器方法。对象的开发者可以显示地编写这些方法，也可以依赖编译器自动合成它们。无论哪种方式，使用这些访问器之一的代码的开发者必须在编译之前将属性名称写入代码中。访问器方法的名称成为使用它的代码的静态部分。例如，前面声明的`BankAccount`对象，编译器会合成一个可以给`myAccount`实例调用的setter：
+为了保持封装性，对象通常为其接口上的属性提供访问器方法。可以显式地编写这些方法，也可以依赖编译器自动合成它们。无论哪种方式，必须在编译之前将属性名称写入代码中。例如，前面声明的`BankAccount`对象，编译器会合成一个可以给`myAccount`实例调用的setter：
 ```
 [myAccount setCurrentBalance:@(100.0)];
 ```
 这样虽然直接，但是缺乏灵活性。另一方面，兼容键值编码的对象提供了使用字符串标识符访问对象属性的更通用机制。
 
 
-#### 使用键（Key）和键路径（Key Path）标识对象的属性
+### 使用键（Key）和键路径（Key Path）标识对象的属性
 
 键是标识特定属性的字符串。按照惯例，表示属性的键是代码中显示的属性本身的名称。键必须使用ASCII编码，不能包含空格，并且通常以小写字母开头（尽管有例外，例如在许多类中找到的URL属性）。
 
@@ -50,7 +48,7 @@
 
 例如，假设`Person`和`Address`类也兼容键值编码，那么应用于`myAccount`实例的键路径`owner.address.street`指的是存储在银行帐户所有者地址中的街道字符串的值。
 
-#### 使用键获取属性值
+### 使用键获取属性值
 
 当对象遵循`NSKeyValueCoding`协议时，其是兼容键值编码的。继承自`NSObject`（其提供了`NSKeyValueCoding`协议的必要方法的默认实现）的对象会自动采用此协议的某些默认行为。这样的对象至少实现了以下基础的基于键的getter：
 - `valueForKey:`：返回接收者的与指定键对应的属性的值。如果根据[访问器搜索模式](#turn)中描述的规则无法找到key所指定的属性，则该对象会向自身发送`valueForUndefinedKey:`消息。`valueForUndefinedKey:`方法的默认实现会抛出一个`NSUndefinedKeyException`，但是子类可以覆盖此行为并更优雅地处理该情况。
@@ -62,7 +60,7 @@
 当使用键路径来寻址属性时，如果键路径中的最后一个键的前一个键是to-many relationship（即它引用一个集合），则返回的值是一个包含前一个键对应集合中的每个值的对应最后一个键的值的集合。例如，请求键路径`transactions.payee`会返回一个包含所有`Transaction`对象的`payee`实例的数组。这也适用于键路径中的多个数组。例如，键路径`accounts.transactions.payee`返回一个包含所有账户中所有交易的所有收款人对象的数组。
 
 
-#### 使用键设置属性值
+### 使用键设置属性值
 
 与getter一样，兼容键值编码的对象也提供了一小组具有默认行为的通用setter：
 - `setValue:forKey:`：将消息接收者的与指定键对应的属性设置为给定值。`setValue:forKey:`方法的默认实现自动解包表示标量和结构体的`NSNumber`和`NSValue`对象，并将它们分配给属性。有关包装和解包语义的详细信息，请参看[表示非对象值](#turn)。如果消息接收对象没有指定的键对应的属性，则该对象会向自身发送`setValue:forUndefinedKey:`消息。`setValue:forUndefinedKey:`方法的默认实现抛出一个`NSUndefinedKeyException`。但是，子类可以重写此方法以自定义方式处理请求。
@@ -72,7 +70,7 @@
 在默认实现中，当试图将非对象属性设置为`nil`时，兼容键值编码的对象会向自身发送`setNilValueForKey:`方法。`setNilValueForKey:`方法的默认实现抛出一个`NSInvalidArgumentException`，但是对象可能会覆盖此行为以替换默认值或标记值，如[处理非对象值](#turn)中所述。
 
 
-#### 使用键简化对象访问
+### 使用键简化对象访问
 
 要了解基于键的getter和setter如何简化代码，请考虑以下示例。 在macOS中，`NSTableView`和`NSOutlineView`对象将标识符字符串与其每个列相关联。 如果支持表的模型对象不兼容键值编码，则表的数据源方法将被强制检查每个列标识符来查找要返回的正确属性，如下面代码所示。 此外，当未来向模型添加另一个属性（在本例中`Person`对象）时，还必须重新访问数据源方法，添加另一个条件来测试新属性并返回相关值。
 ```
@@ -101,7 +99,7 @@
 ```
 
 
-### 访问集合属性
+## 访问集合属性
 
 兼容键值编码的对象以与公开其他类型属性相同的方式公开其To-many relationships类型的属性。可以使用`valueForKey:`和`setValue:forKey:`方法来获取和设置集合对象，就像任何其他对象一样。但是，当想要操纵这些集合的内容时，使用协议定义的可变代理方法通常是最有效的。
 
@@ -113,7 +111,7 @@
 当对代理对象执行向其添加对象和从中删除或者替换对象的操作时，协议的默认实现会相应地修改集合对象的下层属性。这比使用`valueForKey:`方法获取不可变的集合对象，根据该集合对象创建一个包含已修改的内容的集合对象，然后使用`setValue:forKey:`方法将其存储回对象更加有效。在许多情况下，它也比直接使用可变属性更有效。这些方法为集合对象中保存的对象提供了保持KVO兼容的额外好处（有关详细信息，请参看[KVO键值观察（Key-Value Observing）](https://www.jianshu.com/p/ab5a36728dfc)）。
 
 
-### 使用集合运算符
+## 使用集合运算符
 
 当向兼容键值编码的对象发送`valueForKeyPath:`消息时，可以在键路径中嵌入一个集合运算符。集合运算符是一个开头是`@`符号的关键字，它告知getter在返回之前应该以某种方式操作数据。`NSObject`提供的`valueForKeyPath:`方法的默认实现实现了这种行为。
 
@@ -128,7 +126,7 @@
 - 数组运算符返回一个包含指定的集合中所保存对象的子集的`NSArray`实例。
 - 嵌套运算符处理包含其他集合的集合，并返回一个`NSArray`或者`NSSet`实例，具体取决于运算符，它以某种方式合并嵌套集合中的对象。
 
-#### 样本数据
+### 样本数据
 
 以下描述包括演示如何调用每个运算符的代码片段，以及执行此运算的结果。它们依赖于上文提到的`BankAccount`类，它包含一个含有`Transaction`对象的数组。每个`Transaction`对象代表一个简单的支票簿条目，如下所示。
 ```
@@ -158,11 +156,11 @@
 | Mortgage | $1,250.00 | Mar 15, 2016 |
 | Animal Hospital | $600.00 | Jul 15, 2016 |
 
-#### 聚合运算符
+### 聚合运算符
 
 聚合运算符可以处理数组或者属性集，生成反映集合的某些方面的单个值。
 
-##### @avg
+#### @avg
 
 当指定`@avg`运算符时，`valueForKeyPath:`方法会读取集合中每个元素的右键路径指定的属性，将其转换为`double`（用0替换`nil`值），并计算这些值的算数平均值，然后将结果存储在一个`NSNumber`实例中并返回该结果。
 
@@ -172,7 +170,7 @@ NSNumber *transactionAverage = [self.transactions valueForKeyPath:@"@avg.amount"
 ```
 `transactionAverage`的格式化结果为$456.54。
 
-##### @count
+#### @count
 
 当指定`@count`运算符时，`valueForKeyPath:`方法使用一个`NSNumber`实例来返回集合中的对象数量。右键路径（如果存在）将被忽略。
 
@@ -182,7 +180,7 @@ NSNumber *numberOfTransactions = [self.transactions valueForKeyPath:@"@count"];
 ```
 `numberOfTransactions`的值是13。
 
-##### @max
+#### @max
 
 当指定`@max`运算符时，`valueForKeyPath:`方法搜索右键路径指定的集合元素的属性，并返回值最大的一个。搜索时使用`compare:`方法进行比较，许多Foundation类定义了该方法，例如`NSNumber`类。**因此，右键路径标识的属性必须持有一个能够对`compare:`消息进行响应的对象**。搜索会忽略值为`nil`的属性。
 
@@ -192,7 +190,7 @@ NSDate *latestDate = [self.transactions valueForKeyPath:@"@max.date"];
 ```
 `latestDate`的格式化值为Jul 15, 2016。
 
-##### @min
+#### @min
 
 当指定`@min`运算符时，`valueForKeyPath:`方法搜索右键路径指定的集合元素的属性，并返回值最小的一个。搜索时使用`compare:`方法进行比较，许多Foundation类定义了该方法，例如`NSNumber`类。**因此，右键路径标识的属性必须持有一个能够对`compare:`消息进行响应的对象**。搜索会忽略值为`nil`的属性。
 
@@ -202,7 +200,7 @@ NSDate *earliestDate = [self.transactions valueForKeyPath:@"@min.date"];
 ```
 `earliestDate`的格式化值为Dec 1, 2015。
 
-##### @sum
+#### @sum
 
 当指定`@sum`运算符时，`valueForKeyPath:`方法读取集合中每个元素的右键路径指定的属性，将其转换为`double`（用0替换`nil`值），并计算这些值的总和，然后将结果存储在一个`NSNumber`实例中并返回该结果。
 
@@ -212,13 +210,13 @@ NSNumber *amountSum = [self.transactions valueForKeyPath:@"@sum.amount"];
 ```
 `amountSum`的格式化结果为$5,935.00。
 
-#### 数组运算符
+### 数组运算符
 
 数组运算符会使得`valueForKeyPath:`方法返回一个与右键路径标识的特定对象集对应的对象数组。
 
 > **重要**：如果使用数组运算符时，任何叶对象为`nil`，`valueForKeyPath:`方法会引发异常。
 
-##### @distinctUnionOfObjects
+#### @distinctUnionOfObjects
 
 当指定`@distinctUnionOfObjects`运算符时，`valueForKeyPath:`方法创建并返回一个数组，该数组包含与右键路径标识的属性对应的集合的不同对象。
 
@@ -228,7 +226,7 @@ NSArray *distinctPayees = [self.transactions valueForKeyPath:@"@distinctUnionOfO
 ```
 生成的`distinctPayees`数组包含Car Loan，General Cable，Animal Hospital，Green Power，Mortgage。
 
-##### @unionOfObjects
+#### @unionOfObjects
 
 当指定`@unionOfObjects`运算符时，`valueForKeyPath:`方法创建并返回一个数组，该数组包含与右键路径标识的属性对应的集合中的所有对象。**与`@distinctUnionOfObjects`不同，其不会删除重复的对象**。
 
@@ -238,7 +236,7 @@ NSArray *payees = [self.transactions valueForKeyPath:@"@unionOfObjects.payee"];
 ```
 生成的`payees`数组包含Green Power，Green Power，Green Power，Car Loan，Car Loan，Car Loan，General Cable，General Cable，General Cable，Mortgage，Mortgage，Mortgage，Animal Hospital。
 
-#### 嵌套运算符
+### 嵌套运算符
 
 嵌套运算符对嵌套集合进行操作，该集合的每个条目都包含一个集合。
 
@@ -260,7 +258,7 @@ NSArray* arrayOfArrays = @[self.transactions, moreTransactions];
 | Second Mortgage | $1,250.00 | Feb 12, 2016 |
 | Hobby Shop | $600.00 | Jul 14, 2016 |
 
-##### @distinctUnionOfArrays
+#### @distinctUnionOfArrays
 
 当指定`@distinctUnionOfArrays`运算符时，`valueForKeyPath:`方法创建并返回一个数组，该数组包含与右键路径标识的属性对应的所有集合的组合的不同（删除重复项）对象。
 
@@ -270,7 +268,7 @@ NSArray *collectedDistinctPayees = [arrayOfArrays valueForKeyPath:@"@distinctUni
 ```
 生成的`collectedDistinctPayees`数组包含Hobby Shop，Mortgage，Animal Hospital，Second Mortgage，Car Loan，General Cable - Cottage，General Cable，Green Power。
 
-##### @unionOfArrays
+#### @unionOfArrays
 
 当指定`@unionOfArrays`运算符时，`valueForKeyPath:`方法创建并返回一个数组，该数组包含与右键路径标识的属性对应的所有集合的组合的所有（不会删除重复项）对象。
 
@@ -280,10 +278,38 @@ NSArray *collectedPayees = [arrayOfArrays valueForKeyPath:@"@unionOfArrays.payee
 ```
 生成的`collectedPayees`数组包含Green Power，Green Power，Green Power，Car Loan，Car Loan，Car Loan，General Cable，General Cable，General Cable，Mortgage，Mortgage，Mortgage，Animal Hospital，General Cable - Cottage，General Cable - Cottage，General Cable - Cottage，Second Mortgage，Second Mortgage，Second Mortgage，Hobby Shop。
 
-##### @distinctUnionOfSets
+#### @distinctUnionOfSets
 
 当指定`@distinctUnionOfSets`运算符时，`valueForKeyPath:`方法创建并返回一个`NSSet`对象，该对象包含与右键路径标识的属性对应的所有集合的组合的不同对象。
 
 此运算符的行为与`@distinctUnionOfArrays`类似，不同之处在于它需要一个`NSSet`实例，该实例包含的也是`NSSet`实例，而不是一个包含`NSArray`实例的`NSArray`实例。 此外，它返回的也是一个`NSSet`实例。 假设示例数据已存储在集合而不是数组中，示例调用和结果与`@distinctUnionOfArrays`显示的相同。
 
+## 表示非对象值
 
+`NSObject`提供的键值编码协议方法的实现同时支持对象属性和非对象属性。默认实现自动在对象参数或者返回值与非对象值属性之间进行转换。这使得即使存储的属性是标量或者结构体，基于键的setter和getter的签名也保持一致。
+
+当调用协议的其中一个getter（例如`valueForKey:`）时，默认实现将根据[访问器搜索模式](#turn)中描述的规则确定特定的为指定键提供值的访问器方法或者实例变量。如果返回值不是对象，则getter使用该值初始化一个`NSNumber`对象（对于标量）或者`NSValue`对象（对于结构体）并返回该值。
+
+类似地，默认情况下，setter（例如`setValue:forKey:`）在给定特定键时确定一个属性的访问器或者实例变量所需要的数据类型。如果数据类型不是对象类型，则setter首先向传入的值对象发送一个适当的`<type>Value`消息来提取基础数据，并存储该数据。
+
+> **注意**：当使用非对象属性的`nil`值调用键值编码协议setter的其中一个时，setter会向setter消息的接收对象发送一个`setNilValueForKey:`消息。该方法的默认实现会引发`NSInvalidArgumentException`异常，但子类可以覆盖此行为，如[处理非对象值](#turn)中所述，例如设置标记值或者提供有意义的默认值。
+
+### 包装和解包标量类型
+
+下表列出了默认的键值编码实现使用`NSNumber`实例包装的标量类型。对于每种数据类型，该表显示了用于将基础属性值初始化为一个`NSNumber`实例以作为getter返回值的创建方法，还显示了用于在设置操作期间从setter输入参数中提取值的访问器方法。
+
+| Data type | Creation method | Accessor method |
+|-------------|--------------------|----------------------|
+| BOOL | numberWithBool: | boolValue (in iOS) <br> charValue (in macOS)* |
+| char | numberWithChar: | charValue |
+| double | numberWithDouble: | doubleValue |
+| float | numberWithFloat: | floatValue |
+| int | numberWithInt: | intValue | 
+| long | numberWithLong: | longValue |
+| long long | numberWithLongLong: | longLongValue |
+| short | numberWithShort: | shortValue |
+| unsigned char | numberWithUnsignedChar: | unsignedChar |
+| unsigned int | numberWithUnsignedInt: | unsignedInt |
+| unsigned long | numberWithUnsignedLong: | unsignedLong |
+| unsigned long long | numberWithUnsignedLongLong: | unsignedLongLong |
+| unsigned short | numberWithUnsignedShort: | unsignedShort |
