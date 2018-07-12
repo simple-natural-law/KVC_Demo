@@ -330,7 +330,7 @@ NSArray *collectedPayees = [arrayOfArrays valueForKeyPath:@"@unionOfArrays.payee
 自动包装和解包并不只限于`NSPoint`、`NSRange`、`NSRect`和`NSSize`，结构体类型可以包装在`NSValue`对象中，如下所示。
 ```
 typedef struct {
-float x, y, z;
+    float x, y, z;
 } ThreeFloats;
 
 @interface MyClass
