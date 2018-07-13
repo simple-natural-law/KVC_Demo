@@ -379,7 +379,7 @@ if (![person validateValue:&name forKey:@"name" error:&error])
 某些Cocoa技术在某些情况下会自动执行验证。例如，Core Data会在保存管理对象上下文时自动执行验证（请参看[Core Data Programming Guide](https://developer.apple.com/library/archive/documentation/Cocoa/Conceptual/CoreData/index.html#//apple_ref/doc/uid/TP40001075)）。此外，在macOS中，Cocoa绑定允许我们指定应自动执行验证（有关详细信息，请参看[Cocoa Bindings Programming Topics](https://developer.apple.com/library/archive/documentation/Cocoa/Conceptual/CocoaBindings/CocoaBindings.html#//apple_ref/doc/uid/10000167i)）。
 
 
-## 访问器查找方式
+## 访问器查找方式（本节所述较难理解，但坚持看完本文会有所收获的）
 
 `NSObject`提供的`NSKeyValueCoding`协议的默认实现使用明确定义的规则集将基于键的访问器调用映射到对象的属性。这些协议方法使用键参数在其自己的对象实例中查找访问器，实例变量和遵循某些约定的相关方法。虽然很少需要修改此默认查找，但了解它的工作方式能够帮助我们跟踪键值编码对象的行为和使我们自己的对象兼容键值编码。
 
@@ -426,7 +426,7 @@ if (![person validateValue:&name forKey:@"name" error:&error])
 
 2. 如果不存在一对插入和删除方法，会查找名为`set<Key>:`的访问器方法。在这种情况下，也会返回一个能够响应`NSMutableArray`消息的代理对象，但它是通过发送`set<Key>:`消息给接收`mutableArrayValueForKey:`消息的原始对象来响应`NSMutableArray`消息的。
 
-> **注意**：第2步中描述的机制比第1步的效率要低得多，因为它可能涉及重复创建新的集合对象而不是修改现有的集合对象。因此，在设计我们自己的兼容键值编码的对象时，通常应该避免使用它。
+> **注意**：第2步中描述的机制比第1步的效率要低得多，因为它可能涉及重复创建新的集合对象而不是修改现有的集合对象。因此，在设计我们自己的兼容键值编码的对象时，通常应该避免使用该机制。
 
 3. 如果可变数组方法和访问器方法都不存在，并且原始对象的`accessInstanceVariablesDirectly`方法返回`YES`，则按顺序依次查找名为`_<key>`或者`<key>`的实例变量。
     如果存在实例变量，则返回一个代理对象。该代理对象会将其接收到的所有`NSMutableArray`消息转发给实例变量的值，该值通常是`NSMutableArray`或其子类之一的实例。
@@ -444,7 +444,7 @@ if (![person validateValue:&name forKey:@"name" error:&error])
     
 2. 如果未找到可变有序集合方法，则查找名为`set<Key>:`的访问器。在这种情况下，会返回一个代理对象。该代理对象每次接收到`NSMutableOrderedSet`消息时，会发送一个`set<Key>:`消息给接收`mutableOrderedSetValueForKey:`消息的原始对象。
 
-> **注意**：第2步中描述的机制比第1步的效率要低得多，因为它可能涉及重复创建新的集合对象而不是修改现有的集合对象。因此，在设计我们自己的兼容键值编码的对象时，通常应该避免使用它。
+> **注意**：第2步中描述的机制比第1步的效率要低得多，因为它可能涉及重复创建新的集合对象而不是修改现有的集合对象。因此，在设计我们自己的兼容键值编码的对象时，通常应该避免使用该机制。
 
 3. 如果可变有序集合方法和访问器方法都不存在，并且原始对象的`accessInstanceVariablesDirectly`方法返回`YES`，则按顺序依次查找名为`_<key>`或者`<key>`的实例变量。如果存在实例变量，则返回一个代理对象。该代理对象会将其接收到的所有`NSMutableOrderedSet`消息转发给实例变量的值，该值通常是`NSMutableOrderedSet`或其子类之一的实例。
 
@@ -462,11 +462,91 @@ if (![person validateValue:&name forKey:@"name" error:&error])
 
 3. 如果未找到可变集合方法，并且原始对象不是一个managed object，则会查找名为`set<Key>:`的访问器方法。如果存在该方法，则返回一个代理对象。该对象每次接收到`NSMutableSet`消息时，会向原始对象发送一个`set<Key>:`消息。
 
-> **注意**：第3步中描述的机制比第1步的效率要低得多，因为它可能涉及重复创建新的集合对象而不是修改现有的集合对象。因此，在设计我们自己的兼容键值编码的对象时，通常应该避免使用它。
+> **注意**：第3步中描述的机制比第1步的效率要低得多，因为它可能涉及重复创建新的集合对象而不是修改现有的集合对象。因此，在设计我们自己的兼容键值编码的对象时，通常应该避免使用该机制。
 
 4. 如果未找到可变集合方法和访问器方法，并且原始对象的`accessInstanceVariablesDirectly`方法返回`YES`，则按顺序依次查找名为`_<key>`或者`<key>`的实例变量。如果存在实例变量，则返回一个代理对象。该代理对象会将其接收到的所有`NSMutableSet`消息转发给实例变量的值，该值通常是`NSMutableSet`或其子类之一的实例。
 
 5. 如果以上所有步骤都失败，则返回一个代理对象。该对象在收到`NSMutableSet`的消息时，向原始对象发送一个`setValue:forUndefinedKey:`消息。
 
+
+## 实现基本的键值编码兼容
+
+当对对象采用键值编码时，依赖于对象从`NSObject`类继承的`NSKeyValueCoding`协议的默认实现。反过来，默认实现依赖于我们根据某些明确的格式来定义对象的实例变量和访问器方法，以便在接收键值编码消息时，它可以将键字符串与属性相关联。
+
+通常，通过使用`@property`语句声明属性并允许编译器自动合成实例变量（ivar）和访问器来遵循Objective-C中的标准格式。默认情况下，编译器遵循预期的格式。
+
+如果需要在Objective-C中**手动实现**访问器或实例变量，请遵循本节中的指导原则来维护基本的兼容性。
+
+### 基本的Getter
+
+要实现返回属性值的getter，同时可能还要执行其他自定义工作，请使用名称为该属性名的方法，例如`title`字符串属性：
+```
+- (NSString*)title
+{
+    // Extra getter logic…
+
+    return _title;
+}
+```
+对于保存布尔值的属性，也可以使用前缀为**is**的方法，例如`hidden`布尔属性：
+```
+- (BOOL)isHidden
+{
+    // Extra getter logic…
+
+    return _hidden;
+}
+```
+当属性是标量或者结构体时，键值编码的默认实现将值包装在对象中，以便在协议方法的接口上使用，如[表示非对象值](#turn)中所述，无需执行任何特殊操作就可支持此行为。
+
+### 基本的Setter
+
+要实现存储属性值的setter，请使用名称为带有前缀**set**的首字母大写的属性名的方法。 对于`hidden`属性：
+```
+- (void)setHidden:(BOOL)hidden
+{
+    // Extra setter logic…
+
+    _hidden = hidden;
+}
+```
+
+> **警告**：不要在`set<Key>:`方法中调用[验证属性](#turn)中描述的验证方法。
+
+当属性是非对象类型（例如`hidden`布尔）时，协议的默认实现会检测基础数据类型，并在将其应用于setter之前，解包传递给`setValue:forKey:`方法的对象值（在本例中是一个`NSNumber`实例），如[表示非对象值](#turn)中所述。但是，如果有可能将`nil`值写入非对象属性，则覆盖`setNilValueForKey:`方法来处理这种情况，如[处理非对象值](#turn)中所述。`hidden`属性的处理方式只是将`nil`解释为`NO`：
+```
+- (void)setNilValueForKey:(NSString *)key
+{
+    if ([key isEqualToString:@"hidden"]) {
+        [self setValue:@(NO) forKey:@”hidden”];
+    } else {
+        [super setNilValueForKey:key];
+    }
+}
+```
+如果合适，即使允许编译器合成setter，我们也可以提供上述方法覆盖。
+
+### 实例变量
+
+当某个键值编码访问器方法（例如`valueForKey:`）的默认实现无法查找到属性的访问器时，它会询问调用`accessInstanceVariablesDirectly`方法来询问该类是否允许直接使用实例变量。默认情况下，此类方法返回`YES`，但可以覆盖此方法返回`NO`。
+
+如果允许使用实例变量，请确保使用带下划线`_`前缀的属性名来命名它们。通常情况下，编译器在自动合成属性时会执行此操作。但如果使用显式的`@synthesize`指令，则可以手动执行这种命名操作。
+```
+@synthesize title = _title;
+```
+在某些情况下，会使用`@dynamic`指令告知编译器将在运行时提供getter和setter，而不是使用`@synthesize`或者允许编译器自动合成属性。可以通过这样做来避免自动合成setter，以便可以提供集合访问器，如[定义集合方法](#turn)中所述。在这种情况下，手动声明实例变量作为接口声明的一部分。
+```
+@interface MyObject : NSObject {
+    NSString* _title;
+}
+
+@property (nonatomic) NSString* title;
+
+@end
+```
+
+## 定义集合方法
+
+当使用标准命名约定来创建访问器和实例变量时，键值编码协议的默认实现可以定位到它们以响应键值编码消息。对于表示to-many relationship的集合对象，情况和其他属性一样。但是，如果实现了集合访问器，而不是集合属性的基本访问器，则可以：
 
 
