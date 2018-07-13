@@ -51,7 +51,7 @@
 ### 使用键获取属性值
 
 当对象遵循`NSKeyValueCoding`协议时，其是兼容键值编码的。继承自`NSObject`（其提供了`NSKeyValueCoding`协议的必要方法的默认实现）的对象会自动采用此协议的某些默认行为。这样的对象至少实现了以下基础的基于键的getter：
-- `valueForKey:`：返回接收者的与指定键对应的属性的值。如果根据[访问器搜索方式](#turn)中描述的规则无法找到key所指定的属性，则该对象会向自身发送`valueForUndefinedKey:`消息。`valueForUndefinedKey:`方法的默认实现会抛出一个`NSUndefinedKeyException`，但是子类可以覆盖此行为并更优雅地处理该情况。
+- `valueForKey:`：返回接收者的与指定键对应的属性的值。如果根据[访问器查找方式](#turn)中描述的规则无法找到key所指定的属性，则该对象会向自身发送`valueForUndefinedKey:`消息。`valueForUndefinedKey:`方法的默认实现会抛出一个`NSUndefinedKeyException`，但是子类可以覆盖此行为并更优雅地处理该情况。
 - `valueForKeyPath:`：返回相对于接收者的指定键路径对应的属性的值。键路径序列中的任一对象不能兼容特定键的键值编码——即其`valueForKey:`方法的默认实现无法找到访问器方法——该对象会接收到一个`valueForUndefinedKey:`消息。
 - `dictionaryWithValuesForKeys:`：返回接收者的与键数组中每个键对应的属性的值。该方法为数组中的每个键调用`valueForKey:`方法，返回的`NSDictionary`包含数组中所有键的值。
 
@@ -182,7 +182,7 @@ NSNumber *numberOfTransactions = [self.transactions valueForKeyPath:@"@count"];
 
 #### @max
 
-当指定`@max`运算符时，`valueForKeyPath:`方法搜索右键路径指定的集合元素的属性，并返回值最大的一个。搜索时使用`compare:`方法进行比较，许多Foundation类定义了该方法，例如`NSNumber`类。**因此，右键路径标识的属性必须持有一个能够对`compare:`消息进行响应的对象**。搜索会忽略值为`nil`的属性。
+当指定`@max`运算符时，`valueForKeyPath:`方法查找右键路径指定的集合元素的属性，并返回值最大的一个。查找时使用`compare:`方法进行比较，许多Foundation类定义了该方法，例如`NSNumber`类。**因此，右键路径标识的属性必须持有一个能够对`compare:`消息进行响应的对象**。查找会忽略值为`nil`的属性。
 
 获取样本数据中`Transaction`对象的`date`属性的最大值：
 ```
@@ -192,7 +192,7 @@ NSDate *latestDate = [self.transactions valueForKeyPath:@"@max.date"];
 
 #### @min
 
-当指定`@min`运算符时，`valueForKeyPath:`方法搜索右键路径指定的集合元素的属性，并返回值最小的一个。搜索时使用`compare:`方法进行比较，许多Foundation类定义了该方法，例如`NSNumber`类。**因此，右键路径标识的属性必须持有一个能够对`compare:`消息进行响应的对象**。搜索会忽略值为`nil`的属性。
+当指定`@min`运算符时，`valueForKeyPath:`方法查找右键路径指定的集合元素的属性，并返回值最小的一个。查找时使用`compare:`方法进行比较，许多Foundation类定义了该方法，例如`NSNumber`类。**因此，右键路径标识的属性必须持有一个能够对`compare:`消息进行响应的对象**。查找会忽略值为`nil`的属性。
 
 获取样本数据中`Transaction`对象的`date`属性值的最小值：
 ```
@@ -288,7 +288,7 @@ NSArray *collectedPayees = [arrayOfArrays valueForKeyPath:@"@unionOfArrays.payee
 
 `NSObject`提供的键值编码协议方法的实现同时支持对象属性和非对象属性。默认实现自动在对象参数或者返回值与非对象值属性之间进行转换。这使得即使存储的属性是标量或者结构体，基于键的setter和getter的签名也保持一致。
 
-当调用协议的其中一个getter（例如`valueForKey:`）时，默认实现将根据[访问器搜索方式](#turn)中描述的规则确定特定的为指定键提供值的访问器方法或者实例变量。如果返回值不是对象，则getter使用该值初始化一个`NSNumber`对象（对于标量）或者`NSValue`对象（对于结构体）并返回该值。
+当调用协议的其中一个getter（例如`valueForKey:`）时，默认实现将根据[访问器查找方式](#turn)中描述的规则确定特定的为指定键提供值的访问器方法或者实例变量。如果返回值不是对象，则getter使用该值初始化一个`NSNumber`对象（对于标量）或者`NSValue`对象（对于结构体）并返回该值。
 
 类似地，默认情况下，setter（例如`setValue:forKey:`）在给定特定键时确定一个属性的访问器或者实例变量所需要的数据类型。如果数据类型不是对象类型，则setter首先向传入的值对象发送一个适当的`<type>Value`消息来提取基础数据，并存储该数据。
 
@@ -352,7 +352,7 @@ NSValue* value = [NSValue valueWithBytes:&floats objCType:@encode(ThreeFloats)];
 
 ## 验证属性
 
-键值编码协议定义了支持属性验证的方法。就像使用基于键的访问器来读取和写入兼容键值编码的对象的属性一样，也可以通过键（或键路径）来验证属性。当调用`validateValue:forKey:error:`方法（或者`validateValue:forKeyPath:error:`方法）时，协议的默认实现会搜索接收验证消息的对象（或者键路径标识的属性所属对象）来查找方法名称与格式`validate<Key>:error:`相匹配的方法。如果对象没有此类方法，则默认验证成功并且返回`YES`。当存在特定于属性的验证方法时，默认实现将返回调用该方法的结果。
+键值编码协议定义了支持属性验证的方法。就像使用基于键的访问器来读取和写入兼容键值编码的对象的属性一样，也可以通过键（或键路径）来验证属性。当调用`validateValue:forKey:error:`方法（或者`validateValue:forKeyPath:error:`方法）时，协议的默认实现会在接收验证消息的对象（或者键路径标识的属性所属对象）中查找方法名称与格式`validate<Key>:error:`相匹配的方法。如果对象没有此类方法，则默认验证成功并且返回`YES`。当存在特定于属性的验证方法时，默认实现将返回调用该方法的结果。
 
 > **注意**：仅在Objective-C中使用属性验证。
 
@@ -379,13 +379,13 @@ if (![person validateValue:&name forKey:@"name" error:&error])
 某些Cocoa技术在某些情况下会自动执行验证。例如，Core Data会在保存管理对象上下文时自动执行验证（请参看[Core Data Programming Guide](https://developer.apple.com/library/archive/documentation/Cocoa/Conceptual/CoreData/index.html#//apple_ref/doc/uid/TP40001075)）。此外，在macOS中，Cocoa绑定允许我们指定应自动执行验证（有关详细信息，请参看[Cocoa Bindings Programming Topics](https://developer.apple.com/library/archive/documentation/Cocoa/Conceptual/CocoaBindings/CocoaBindings.html#//apple_ref/doc/uid/10000167i)）。
 
 
-## 访问器搜索方式
+## 访问器查找方式
 
-`NSObject`提供的`NSKeyValueCoding`协议的默认实现使用明确定义的规则集将基于键的访问器调用映射到对象的属性。这些协议方法使用键参数在其自己的对象实例中搜索访问器，实例变量和遵循某些约定的相关方法。虽然很少需要修改此默认搜索，但了解它的工作方式能够帮助我们跟踪键值编码对象的行为和使我们自己的对象兼容键值编码。
+`NSObject`提供的`NSKeyValueCoding`协议的默认实现使用明确定义的规则集将基于键的访问器调用映射到对象的属性。这些协议方法使用键参数在其自己的对象实例中查找访问器，实例变量和遵循某些约定的相关方法。虽然很少需要修改此默认查找，但了解它的工作方式能够帮助我们跟踪键值编码对象的行为和使我们自己的对象兼容键值编码。
 
 > **注意：本节中的描述使用`<key>`和`<Key>`作为在键值编码协议方法中的键字符串参数的占位符。协议方法将占位符用作辅助方法调用或变量名查找的一部分。映射的属性名称取决于占位符。例如，对于getter`<key>`和`is<Key>`，名为`hidden`的属性映射到`hidden`和`isHidden`。**
 
-### Getter的搜索方式
+### Getter的查找方式
 
 给定一个键参数作为输入，在接收`valueForKey:`调用的类实例中，`valueForKey:`的默认实现会执行以下过程：
 1. 在实例中按顺序依次查找名为`get<Key>`、`<key>`、`is<Key>`或者`_<key>`的访问器方法。如果存在某个方法，则调用该方法并跳到第5步。否则，执行第**2**步。
@@ -398,7 +398,7 @@ if (![person validateValue:&name forKey:@"name" error:&error])
     如果三种方法全部存在，则创建一个响应`NSSet`类所有方法的集合代理对象并返回该对象。否则执行第**4**步。
     代理对象随后将其接收的任何`NSSet`消息转换为`countOf<Key>`、`enumeratorOf<Key>`和`memberOf<Key>:`消息的某种组合并发送给原始对象。实际上，代理对象与兼容键值编码的对象一起工作，使得底层属性的行为就像该属性是`NSSet`一样，即使它并不是。
     
-4. 如果没有找到简单的访问器方法或者集合访问方法组，并且实例的类方法`accessInstanceVariablesDirectly`返回`YES`，则按顺序依次搜索名为`_<key>`、`_is<Key>`、`<key>`或者`is<Key>`的实例变量。如果存在，则直接获取实例变量的值并执行第**5**步。否则，执行第**6**步。
+4. 如果没有找到简单的访问器方法或者集合访问方法组，并且实例的类方法`accessInstanceVariablesDirectly`返回`YES`，则按顺序依次查找名为`_<key>`、`_is<Key>`、`<key>`或者`is<Key>`的实例变量。如果存在，则直接获取实例变量的值并执行第**5**步。否则，执行第**6**步。
 
 5. 如果检索到的属性值是一个对象指针，则返回该结果。
     如果属性值是`NSNumber`支持的标量类型，则将其存储在`NSNumber`实例中并返回该值。
@@ -407,7 +407,17 @@ if (![person validateValue:&name forKey:@"name" error:&error])
 6. 如果以上所有查找都失败了，则调用`valueForUndefinedKey:`方法。 默认情况下，这会引发异常，但`NSObject`的子类可能会提供特定于键的行为。
 
 
-### Setter的搜索方式
+### Setter的查找方式
+
+给定键和值参数作为输入，在接收`setValue:forKey:`调用的类实例中，`setValue:forKey:`的默认实现会执行以下过程：
+1. 按顺序依次查找名为`set<Key>:`或者`_set<Key>`的访问器方法。如果存在某个方法，则使用输入的值调用该方法来设置属性值。否则，执行第**2**步。
+
+2. 如果未找到简单的访问器方法，并且实例的类方法`accessInstanceVariablesDirectly`方法返回`YES`，则按顺序依次查找名为`_<key>`、`_is<Key>`、`<key>`或者`is<Key>`的实例变量。如果存在，则直接使用输入的值来设置变量。否则，执行第**3**步。
+
+3. 如果未找到访问器方法和实例变量，则调用`setValue:forUndefinedKey:`方法。默认情况下，这会引发异常，但`NSObject`的子类可能会提供特定于键的行为。
+
+### 可变数组的查找方式
+
 
 
     
