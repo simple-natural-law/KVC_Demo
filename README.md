@@ -416,9 +416,17 @@ if (![person validateValue:&name forKey:@"name" error:&error])
 
 3. 如果未找到访问器方法和实例变量，则调用`setValue:forUndefinedKey:`方法。默认情况下，这会引发异常，但`NSObject`的子类可能会提供特定于键的行为。
 
+
 ### 可变数组的查找方式
 
+给定键和值参数作为输入，`mutableArrayValueForKey:`的默认实现会为名称为`<key>`的属性返回一个可变代理数组，其执行以下过程：
+1. 查找一对名为`insertObject:in<Key>AtIndex:`和`removeObjectFrom<Key>AtIndex:`（相当于`NSMutableArray`类的原始方法）的方法，或者名为`insert<Key>:atIndexes:`和`remove<Key>AtIndexes:`（相当于`NSMutableArray`的`insertObjects:atIndexes:`和`removeObjectsAtIndexes:`）的方法。
+    如果至少存在一对插入和删除方法，则返回一个能够响应`NSMutableArray`消息的代理对象。代理对象随后会将接收到的`NSMutableArray`消息转换为`insertObject:in<Key>AtIndex:`、`removeObjectFrom<Key>AtIndex:`、`insert<Key>:atIndexes:`和`remove<Key>AtIndexes:`消息的某种组合发送给接收`mutableArrayValueForKey:`消息的原始对象。
+    当原始对象实现了一个可选的名为`replaceObjectIn<Key>AtIndex:withObject:`或者`replace<Key>AtIndexes:with<Key>:`的替换对象方法时，代理对象会在适当时间使用它们以获得最佳性能。
+
+2. 如果不存在一对插入和删除方法，会查找名为`set<Key>:`的访问器方法。在这种情况下，也会返回一个能够响应`NSMutableArray`消息的代理对象，但它是通过发送`set<Key>:`消息给接收`mutableArrayValueForKey:`消息的原始对象来响应`NSMutableArray`消息的。
+
+> **注意**：第2步中描述的机制比第1步的效率要低得多，因为它可能涉及重复创建新的集合对象而不是修改现有的集合对象。因此，在设计我们自己的兼容键值编码的对象时，通常应该避免使用它。
 
 
-    
 
