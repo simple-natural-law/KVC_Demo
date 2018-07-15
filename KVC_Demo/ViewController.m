@@ -43,8 +43,6 @@
     // 使用keyPath
     NSString *name = [bankAccount valueForKeyPath:@"owner.name"];
     NSLog(@"KVC读取属性值(key) ====== %@",name);
-    
-    
 }
 
 
