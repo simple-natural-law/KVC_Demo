@@ -7,6 +7,8 @@
 //
 
 #import "ViewController.h"
+#import "BankAccount.h"
+
 
 @interface ViewController ()
 

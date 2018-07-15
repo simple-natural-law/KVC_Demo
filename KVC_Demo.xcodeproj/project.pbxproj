@@ -7,6 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		343590CF20FB2C7500E5FD23 /* BankAccount.m in Sources */ = {isa = PBXBuildFile; fileRef = 343590CE20FB2C7500E5FD23 /* BankAccount.m */; };
+		343590D220FB2D0D00E5FD23 /* Person.m in Sources */ = {isa = PBXBuildFile; fileRef = 343590D120FB2D0D00E5FD23 /* Person.m */; };
+		343590D520FB2D3000E5FD23 /* Transaction.m in Sources */ = {isa = PBXBuildFile; fileRef = 343590D420FB2D3000E5FD23 /* Transaction.m */; };
 		3481DFB320F4941F00728800 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 3481DFB220F4941F00728800 /* AppDelegate.m */; };
 		3481DFB620F4941F00728800 /* ViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 3481DFB520F4941F00728800 /* ViewController.m */; };
 		3481DFB920F4941F00728800 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 3481DFB720F4941F00728800 /* Main.storyboard */; };
@@ -16,6 +19,12 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		343590CD20FB2C7500E5FD23 /* BankAccount.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = BankAccount.h; sourceTree = "<group>"; };
+		343590CE20FB2C7500E5FD23 /* BankAccount.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = BankAccount.m; sourceTree = "<group>"; };
+		343590D020FB2D0D00E5FD23 /* Person.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Person.h; sourceTree = "<group>"; };
+		343590D120FB2D0D00E5FD23 /* Person.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = Person.m; sourceTree = "<group>"; };
+		343590D320FB2D3000E5FD23 /* Transaction.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Transaction.h; sourceTree = "<group>"; };
+		343590D420FB2D3000E5FD23 /* Transaction.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = Transaction.m; sourceTree = "<group>"; };
 		3481DFAE20F4941F00728800 /* KVC_Demo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = KVC_Demo.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		3481DFB120F4941F00728800 /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
 		3481DFB220F4941F00728800 /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
@@ -62,6 +71,12 @@
 				3481DFB220F4941F00728800 /* AppDelegate.m */,
 				3481DFB420F4941F00728800 /* ViewController.h */,
 				3481DFB520F4941F00728800 /* ViewController.m */,
+				343590CD20FB2C7500E5FD23 /* BankAccount.h */,
+				343590CE20FB2C7500E5FD23 /* BankAccount.m */,
+				343590D020FB2D0D00E5FD23 /* Person.h */,
+				343590D120FB2D0D00E5FD23 /* Person.m */,
+				343590D320FB2D3000E5FD23 /* Transaction.h */,
+				343590D420FB2D3000E5FD23 /* Transaction.m */,
 				3481DFB720F4941F00728800 /* Main.storyboard */,
 				3481DFBA20F4942100728800 /* Assets.xcassets */,
 				3481DFBC20F4942100728800 /* LaunchScreen.storyboard */,
@@ -141,7 +156,10 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				343590D520FB2D3000E5FD23 /* Transaction.m in Sources */,
 				3481DFB620F4941F00728800 /* ViewController.m in Sources */,
+				343590CF20FB2C7500E5FD23 /* BankAccount.m in Sources */,
+				343590D220FB2D0D00E5FD23 /* Person.m in Sources */,
 				3481DFC120F4942100728800 /* main.m in Sources */,
 				3481DFB320F4941F00728800 /* AppDelegate.m in Sources */,
 			);
