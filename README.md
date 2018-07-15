@@ -524,7 +524,7 @@ if (![person validateValue:&name forKey:@"name" error:&error])
     }
 }
 ```
-如果合适，即使允许编译器合成setter，我们也可以提供上述方法覆盖。
+如果有必要，即使允许编译器合成setter，我们也可以提供上述方法覆盖。
 
 ### 实例变量
 
@@ -547,6 +547,158 @@ if (![person validateValue:&name forKey:@"name" error:&error])
 
 ## 定义集合方法
 
-当使用标准命名约定来创建访问器和实例变量时，键值编码协议的默认实现可以定位到它们以响应键值编码消息。对于表示to-many relationship的集合对象，情况和其他属性一样。但是，如果实现了集合访问器，而不是集合属性的基本访问器，则可以：
+当使用标准命名约定来创建访问器和实例变量时，键值编码协议的默认实现可以定位到它们以响应键值编码消息。对于表示to-many relationships（请看[访问对象属性](#turn)中的描述）的集合对象，情况和其他属性一样。但是，如果实现了集合访问器，而不是集合属性的基本访问器，则可以：
+- 与`NSArray`和`NSSet`以外的类建立to-many relationships。在对象中实现集合方法时，getter的默认实现返回一个代理对象，代理对象会调用这些集合方法来响应它接收到的`NSArray`和`NSSet`消息。底层属性对象不必是`NSArray`和`NSSet`的实例，因为代理对象会使用这些集合方法来提供预期的行为。
+- 在改变to-many relationships的内容时，提供更好的性能。协议的默认实现会使用集合方法来改变属性，而不是使用基本的setter重复创建新的集合对象来响应每个更改。
+- 为对象的集合属性的内容提供键值观察兼容的访问。有关键值观察的更多信息，请参看[KVO键值观察（Key-Value Observing）](https://www.jianshu.com/p/ab5a36728dfc)。
+
+可以实现两类集合访问器中的一种，具体取决于是希望关系的行为类似于一个索引的、有序的集合（如`NSArray`对象），还是一个无序的、唯一的集合（如`NSSet`对象）。在任何一种情况下，都要至少实现一组方法来支持对属性的读取访问，然后添加一个额外的集合来使集合的内容的突变成为可能。
+
+> **注意**：键值编码协议未声明本节中描述的方法。取而代之的是，`NSObject`提供的协议的默认实现会在兼容键值编码的对象中查找这些方法，如[访问器查找方式]中所述，并使用它们来处理作为协议的一部分的键值编码消息。
+
+
+
+### 访问索引集合
+
+添加索引访问器方法来提供一个计算、检索、添加和替换有序关系中的对象的机制。底层对象通常是`NSArray`或者`NSMutableArray`的实例，但是如果提供集合访问器，则使得实现了这些方法的任何对象像数组一样被操作成为了可能。
+
+#### 索引集合Getter
+
+对于一个没有默认getter的集合属性，如果提供以下索引集合getter方法，协议的默认实现在响应`valueForKey:`消息时，会返回一个行为类似于`NSArray`的代理对象，但该代理对象调用这些集合方法来执行其工作。
+
+> **注意**：在现代Objective-C中，编译器默认为每个属性合成一个getter，因此默认实现不会使用本节中的方法创建只读代理（请查看[Getter的查找方式](#turn)）。 可以通过不声明属性（仅依赖于ivar）或将属性声明为`@dynamic`（告知编译器会在运行时提供访问器行为）来解决此问题。 无论哪种方式，编译器都不会提供默认的getter，并且默认实现会使用以下方法。
+
+- `countOf<Key>`：此方法将to-many relationship中的对象数作为`NSUInteger`返回，就像数组的原始方法`count`一样。实际上，当底层属性是一个`NSArray`时，使用`count`方法返回结果。
+    例如，对于表示一个银行交易列表的to-many relationship，由名为为`transactions`的`NSArray`支持：
+```
+- (NSUInteger)countOfTransactions {
+    return [self.transactions count];
+}
+```
+
+- `objectIn<Key>AtIndex:`或者`<key>AtIndexes:`：第一个方法返回to-many relationship中在指定的索引位置的对象，而第二个方法返回在由`NSIndexSet`参数指定的索引位置的对象数组。 它们分别对应于`NSArray`方法`objectAtIndex:`和`objectsAtIndexes:`，只需要实现其中一个。 `transactions`数组的对应应方法为：
+```
+- (id)objectInTransactionsAtIndex:(NSUInteger)index {
+    return [self.transactions objectAtIndex:index];
+}
+
+- (NSArray *)transactionsAtIndexes:(NSIndexSet *)indexes {
+    return [self.transactions objectsAtIndexes:indexes];
+}
+```
+
+- `get<Key>:range:`：此方法是可选的，但可以提高性能。 它返回集合中处于指定范围内的对象，对应于`NSArray`方法`getObjects:range:`。`transactions`数组的实现为：
+```
+- (void)getTransactions:(Transaction * __unsafe_unretained *)buffer
+range:(NSRange)inRange {
+    [self.transactions getObjects:buffer range:inRange];
+}
+```
+
+#### 索引集合Mutator
+
+支持索引访问器的可变的to-many relationship需要实现不同的方法组。当提供这些setter方法时，默认实现在响应`mutableArrayValueForKey:`消息时，返回一个行为类似于`NSMutableArray`对象的代理对象，但该代理对象会使用原始对象的方法来执行其工作。这通常比直接返回`NSMutableArray`对象更有效，它还使得to-many relationship的内容兼容键值观察成为可能。
+
+为了使对象的键值编码兼容一个可变有序的to-many relationship，请实现以下方法：
+- `insertObject:in<Key>AtIndex:`或者`insert<Key>:atIndexes:`：第一个方法接收要插入的对象和该对象的索引，第二个方法接收一个对象数组和包含对象数组中每个对象的索引的`NSIndexSet`对象，只需要其中一种方法。它们类似于`NSMutableArray`的`insertObject:atIndex:`和`insertObjects:atIndexes:`方法。
+    `transactions`对象被声明为一个`NSMutableArray`：
+```
+- (void)insertObject:(Transaction *)transaction
+inTransactionsAtIndex:(NSUInteger)index {
+    [self.transactions insertObject:transaction atIndex:index];
+}
+
+- (void)insertTransactions:(NSArray *)transactionArray
+atIndexes:(NSIndexSet *)indexes {
+    [self.transactions insertObjects:transactionArray atIndexes:indexes];
+}
+```
+
+- `removeObjectFrom<Key>AtIndex:`或者`remove<Key>AtIndexes:`：第一个方法接收要删除的对象的索引，第二个方法接收一个包含要删除对象的索引的`NSIndexSet`对象，只需要其中一种方法。它们对应于`NSMutableArray`的`removeObjectAtIndex:`和`removeObjectsAtIndexes:`方法。
+```
+- (void)removeObjectFromTransactionsAtIndex:(NSUInteger)index {
+    [self.transactions removeObjectAtIndex:index];
+}
+
+- (void)removeTransactionsAtIndexes:(NSIndexSet *)indexes {
+    [self.transactions removeObjectsAtIndexes:indexes];
+}
+```
+
+- `replaceObjectIn<Key>AtIndex:withObject:`或者`replace<Key>AtIndexes:with<Key>:`：这些替换访问器为代理对象提供了一种直接替换集合中的对象的方式，而不必删除一个对象之后再插入一个对象。它们对应于`NSMutableArray`的`replaceObjectAtIndex:withObject:`和`replaceObjectsAtIndexes:withObjects:`方法。
+```
+- (void)replaceObjectInTransactionsAtIndex:(NSUInteger)index
+withObject:(id)anObject {
+    [self.transactions replaceObjectAtIndex:index withObject:anObject];
+}
+
+- (void)replaceTransactionsAtIndexes:(NSIndexSet *)indexes
+withTransactions:(NSArray *)transactionArray {
+    [self.transactions replaceObjectsAtIndexes:indexes withObjects:transactionArray];
+}
+```
+
+### 访问无序集合
+
+添加无序集合访问器方法，以提供一种访问和修改无序关系中的对象的机制。通常，此关系是一个`NSSet`或者`NSMutableSet`对象。 但是，当对象实现了这些访问器时，使得对象像`NSSet`的实例一样操作成为了可能。
+
+
+#### 无序集合Getter
+
+当提供以下集合getter方法以返回集合中的对象数、迭代集合对象和测试对象是否已存在于集合中时，在响应`valueForKey`消息时，协议的默认实现返回一个行为类似于`NSSet`的代理对象，但其调用以下集合方法来完成其工作。
+- `countOf<Key>`：此方法返回关系中的项目数，对应于`NSSet`的`count`方法。当底层对象是`NSSet`时，直接调用此方法。例如，名为`employees`的`NSSet`对象包含`Employee`对象：
+```
+- (NSUInteger)countOfEmployees {
+    return [self.employees count];
+}
+```
+
+- `enumeratorOf<Key>`：此方法返回一个`NSEnumerator`实例，该实例用于迭代关系中的对象。 该方法对应于`NSSet`的`objectEnumerator`方法。关于`NSEnumerator`的更多信息，请参看[Collections Programming Topics](https://developer.apple.com/library/archive/documentation/Cocoa/Conceptual/Collections/Collections.html#//apple_ref/doc/uid/10000034i)中的[Enumeration: Traversing a Collection’s Elements](#turn)。
+```
+- (NSEnumerator *)enumeratorOfEmployees {
+    return [self.employees objectEnumerator];
+}
+```
+
+- `memberOf<Key>:`：此方法将传递的对象与集合中的内容进行比较，并将匹配对象作为参数返回。如果未找到匹配的对象，则返回`nil`。如果手动实现，通常使用`isEqual:`方法来比较对象。 当底层对象是`NSSet`对象时，可以使用等效的`member:`方法。
+```
+- (Employee *)memberOfEmployees:(Employee *)anObject {
+    return [self.employees member:anObject];
+}
+```
+
+#### 无序集合Mutators
+
+支持无序访问器的可变的to-many relationship需要实现不同的方法组。当提供这些setter方法时，默认实现在响应`mutableSetValueForKey:`消息时，返回一个行为类似于`NSMutableSet`对象的代理对象，但该代理对象会使用原始对象的方法来执行其工作。这通常比直接返回`NSMutableSet`对象更有效，它还使得to-many relationship的内容兼容键值观察成为可能。
+
+为了使对象的键值编码兼容一个可变无序的to-many relationship，请实现以下方法：
+- `add<Key>Object:`或者`add<Key>:`：这些方法将一个或者一组对象添加到关系中，向关系添加一组项目时，请确保关系中不存在同样的对象。只需要其中一种方法，它们类似于`NSMutableSet`的`addObject:`和`unionSet:`方法。对于`employees`集：
+```
+- (void)addEmployeesObject:(Employee *)anObject {
+    [self.employees addObject:anObject];
+}
+
+- (void)addEmployees:(NSSet *)manyObjects {
+    [self.employees unionSet:manyObjects];
+}
+```
+
+- `remove<Key>Object:`或者`remove<Key>:`：这些方法从关系中删除单个或者一组项目，只需要其中一种方法。它们类似于`NSMutableSet`的`removeObject:`和`minusSet:`方法。例如：
+```
+- (void)removeEmployeesObject:(Employee *)anObject {
+    [self.employees removeObject:anObject];
+}
+
+- (void)removeEmployees:(NSSet *)manyObjects {
+    [self.employees minusSet:manyObjects];
+}
+```
+
+- `intersect<Key>:`：此方法接收一个`NSSet`参数，从关系中删除所有不是输入集和集合集公共的对象。 这相当于`NSMutableSet`的`intersectSet:`。例如:
+```
+- (void)intersectEmployees:(NSSet *)otherObjects {
+    return [self.employees intersectSet:otherObjects];
+}
+```
 
 
