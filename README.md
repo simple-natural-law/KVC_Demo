@@ -703,6 +703,63 @@ withTransactions:(NSArray *)transactionArray {
 
 ## 处理非对象值
 
+通常情况下，兼容键值编码的对象依赖于键值编码的默认实现来自动包装和解包非对象属性，如[表示非对象值](#turn)中所述。但是，可以覆盖此默认行为。
+
+如果兼容键值编码的对象接收到一个将`nil`作为非对象属性的值的`setValue:forKey:`消息，`setValue:forKey:`的默认实现会发送一个`setNilValueForKey:`消息给原始对象，该消息的默认实现会引发一个`NSInvalidArgumentException`异常。可以覆盖该方法来提供特定的行为。
+
+```
+- (void)setNilValueForKey:(NSString *)key
+{
+    if ([key isEqualToString:@"age"]) {
+        [self setValue:@(0) forKey:@”age”];
+    } else {
+        [super setNilValueForKey:key];
+    }
+}
+```
+> **注意**：当一个对象覆盖了不推荐使用的`unableToSetNilForKey:`方法时，`setValue:forKey:`会调用该方法，而不是`setNilValueForKey`。
+
+
 ## 添加验证
 
+键值编码协议定义了通过键或者键路径来验证属性的方法，这些方法的默认实现依赖于我们定义的一些方法。具体来说，为任何想要验证的属性提供一个`validate<Key>:error:`方法。默认实现在响应`validateValue:forKey:error:`消息时会查找这些方法。
 
+如果没有为属性提供验证方法，则协议的默认实现假定验证该属性成功而不管属性值是什么。
+
+### 实现一个验证方法
+
+当为属性提供一个验证方法时，该方法通过引用接收两个参数：要验证的值对象和用于返回错误信息的`NSError`。验证方法可以执行以下三种操作之一：
+- 当值对象有效时，返回`YES`，并且不更改值对象和错误。
+- 当值对象无效且不能或不想提供有效的替代方法时，请将`error`参数设置为`NSError`对象，该对象指示失败的原因并返回`NO`。
+- 当值对象无效但我们知道有效替代项时，请创建有效对象，将值引用分配给新对象，并返回`YES`且不修改错误引用。 如果提供其他值，则始终返回新对象，而不是修改正在验证的对象，即使原始对象是可变的。
+
+```
+- (BOOL)validateName:(id *)ioValue error:(NSError * __autoreleasing *)outError{
+    if ((*ioValue == nil) || ([(NSString *)*ioValue length] < 2)) {
+        if (outError != NULL) {
+            *outError = [NSError errorWithDomain:PersonErrorDomain code:PersonInvalidNameCode userInfo:@{ NSLocalizedDescriptionKey : @"Name too short" }];
+        }
+        return NO;
+    }
+    return YES;
+}
+```
+> **重要**：在修改错误引用之前，始终检查错误引用是否为`NULL`。
+
+### 标量值的验证
+
+验证方法的`value`参数是一个对象，因此，非对象属性的值包装在`NSNumber`或者`NSValue`对象中。以下代码演示了标量属性`age`的验证方法。
+```
+- (BOOL)validateAge:(id *)ioValue error:(NSError * __autoreleasing *)outError {
+    if (*ioValue == nil) {
+        // Value is nil: Might also handle in setNilValueForKey
+        *ioValue = @(0);
+    } else if ([*ioValue floatValue] < 0.0) {
+        if (outError != NULL) {
+            *outError = [NSError errorWithDomain:PersonErrorDomain code:PersonInvalidAgeCode userInfo:@{ NSLocalizedDescriptionKey : @"Age cannot be negative" }];
+        }
+        return NO;
+    }
+    return YES;
+}
+```
