@@ -57,7 +57,7 @@
 
 > **注意**：集合对象（如`NSArray`，`NSDictionary`和`NSSet`）不能包含`nil`作为值。相反，可以使用`NSNull`对象来表示`nil`值，`NSNull`提供了一个实例来表示对象属性的`nil`值。`dictionaryWithValuesForKeys:`方法和相关的`setValuesForKeysWithDictionary:`方法的默认实现自动在`NSNull`（在字典参数中）和`nil`（在存储属性中）之间进行转换。
 
-当使用键路径来寻址属性时，如果键路径中的最后一个键的前一个键是to-many relationship（即它引用一个集合），则返回的值是一个包含前一个键对应集合中的每个值的对应最后一个键的值的集合。例如，请求键路径`transactions.payee`会返回一个包含所有`Transaction`对象的`payee`实例的数组。这也适用于键路径中的多个数组。例如，键路径`accounts.transactions.payee`返回一个包含所有账户中所有交易的所有收款人对象的数组。
+当使用键路径来寻址属性时，如果键路径中的最后一个键的前一个键是to-many relationship（即它引用一个集合），则返回的值是一个包含集合中的每个对象的最后一个键所标识属性的值的集合。例如，请求键路径`transactions.payee`会返回一个包含所有`Transaction`对象的`payee`实例的数组。这也适用于键路径中的多个数组。例如，键路径`accounts.transactions.payee`返回一个包含所有账户中所有交易的所有收款人对象的数组。
 
 
 ### 使用键设置属性值
