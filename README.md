@@ -3,7 +3,7 @@
 
 ## 关于键值编码
 
-键值编码（KVC）是一种由`NSKeyValueCoding`非正式协议提供的机制，对象采用该机制来提供对其属性的间接访问。当对象兼容键值编码时，可以通过字符串参数和简洁、统一的接口来访问其属性。这种间接访问机制补充了实例变量和其关联的访问器方法提供的直接访问。
+键值编码（KVC）是一种由`NSKeyValueCoding`非正式协议提供的机制，对象采用该机制来提供对其属性的间接访问。当对象兼容键值编码时，可以使用字符串参数和简洁、统一的接口来访问其属性。这种间接访问机制补充了实例变量和其关联的访问器方法提供的直接访问。
 
 通常使用访问器方法来访问对象的属性。get访问器（或者getter）返回属性的值，set访问器（或者setter）设置属性的值。在Objective-C中，还可以直接访问属性的实例变量。以任何方式访问对象属性都很简单，但需要调用属性特定的方法或者变量名称。随着属性列表的增长或改变，访问这些属性的代码也必须如此。 相反，兼容键值编码的对象提供了一个简单的消息传递接口，该接口在其所有属性中都是一致的。
 
@@ -379,7 +379,7 @@ if (![person validateValue:&name forKey:@"name" error:&error])
 某些Cocoa技术在某些情况下会自动执行验证。例如，Core Data会在保存管理对象上下文时自动执行验证（请参看[Core Data Programming Guide](https://developer.apple.com/library/archive/documentation/Cocoa/Conceptual/CoreData/index.html#//apple_ref/doc/uid/TP40001075)）。此外，在macOS中，Cocoa绑定允许我们指定应自动执行验证（有关详细信息，请参看[Cocoa Bindings Programming Topics](https://developer.apple.com/library/archive/documentation/Cocoa/Conceptual/CocoaBindings/CocoaBindings.html#//apple_ref/doc/uid/10000167i)）。
 
 
-## 访问器查找方式（本节所述较难理解，但坚持看完本文会有所收获的）
+## 访问器查找方式
 
 `NSObject`提供的`NSKeyValueCoding`协议的默认实现使用明确定义的规则集将基于键的访问器调用映射到对象的属性。这些协议方法使用键参数在其自己的对象实例中查找访问器，实例变量和遵循某些约定的相关方法。虽然很少需要修改此默认查找，但了解它的工作方式能够帮助我们跟踪键值编码对象的行为和使我们自己的对象兼容键值编码。
 
@@ -700,5 +700,9 @@ withTransactions:(NSArray *)transactionArray {
     return [self.employees intersectSet:otherObjects];
 }
 ```
+
+## 处理非对象值
+
+## 添加验证
 
 
