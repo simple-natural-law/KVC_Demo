@@ -381,7 +381,7 @@ if (![person validateValue:&name forKey:@"name" error:&error])
 
 ## 访问器查找方式
 
-`NSObject`提供的`NSKeyValueCoding`协议的默认实现使用明确定义的规则集将基于键的访问器调用映射到对象的属性。这些协议方法使用键参数在其自己的对象实例中查找访问器，实例变量和遵循某些约定的相关方法。虽然很少需要修改此默认查找，但了解它的工作方式能够帮助我们跟踪键值编码对象的行为和使我们自己的对象兼容键值编码。
+`NSObject`提供的`NSKeyValueCoding`协议的默认实现使用明确定义的规则集将基于键的访问器调用映射到对象的属性。这些协议方法使用键参数在其自己的对象实例中查找访问器、实例变量和遵循某些约定的相关方法。虽然很少需要修改此默认查找，但了解它的工作方式能够帮助我们跟踪键值编码对象的行为和使我们自己的对象兼容键值编码。
 
 > **注意：本节中的描述使用`<key>`和`<Key>`作为在键值编码协议方法中的键字符串参数的占位符。协议方法将占位符用作辅助方法调用或变量名查找的一部分。映射的属性名称取决于占位符。例如，对于getter`<key>`和`is<Key>`，名为`hidden`的属性映射到`hidden`和`isHidden`。**
 
@@ -390,11 +390,11 @@ if (![person validateValue:&name forKey:@"name" error:&error])
 给定一个键参数作为输入，在接收`valueForKey:`调用的类实例中，`valueForKey:`的默认实现会执行以下过程：
 1. 在实例中按顺序依次查找名为`get<Key>`、`<key>`、`is<Key>`或者`_<key>`的访问器方法。如果存在某个方法，则调用该方法并跳到第5步。否则，执行第**2**步。
 
-2. 在实例中查找名为`countOf<Key>`、`objectIn<Key>AtIndex:`（相当于`NSArray`类定义的原始方法）和`<key>AtIndexes:`（相当于`NSArray`的`objectsAtIndexes:`方法）的方法。
+2. 在实例中查找名为`countOf<Key>`、`objectIn<Key>AtIndex:`（对应于`NSArray`类定义的原始方法）和`<key>AtIndexes:`（对应于`NSArray`的`objectsAtIndexes:`方法）的方法。
     如果找到第一个方法和其他两个方法中的至少一个，则创建一个响应`NSArray`类所有方法的集合代理对象并返回该对象。否则，执行第**3**步。
     代理对象随后将其接收的任何`NSArray`消息转换为`countOf<Key>`、`objectIn<Key>AtIndex:`和`<key>AtIndexes:`消息的某种组合并发送给原始对象。如果原始对象还实现了名为`get<Key>:range:`的可选方法，则代理对象也会在适当时使用该方法。实际上，代理对象与兼容键值编码的对象一起工作，使得底层属性的行为就像该属性是`NSArray`一样，即使它并不是。
     
-3. 在实例中查找名为`countOf<Key>`、`enumeratorOf<Key>`和`memberOf<Key>:`（相当于`NSSet`类定义的原始方法）的三种方法。
+3. 在实例中查找名为`countOf<Key>`、`enumeratorOf<Key>`和`memberOf<Key>:`（对应于`NSSet`类定义的原始方法）的三种方法。
     如果三种方法全部存在，则创建一个响应`NSSet`类所有方法的集合代理对象并返回该对象。否则执行第**4**步。
     代理对象随后将其接收的任何`NSSet`消息转换为`countOf<Key>`、`enumeratorOf<Key>`和`memberOf<Key>:`消息的某种组合并发送给原始对象。实际上，代理对象与兼容键值编码的对象一起工作，使得底层属性的行为就像该属性是`NSSet`一样，即使它并不是。
     
@@ -420,7 +420,7 @@ if (![person validateValue:&name forKey:@"name" error:&error])
 ### 可变数组的查找方式
 
 给定键和值参数作为输入，`mutableArrayValueForKey:`的默认实现会为名称为`<key>`的属性返回一个可变代理数组，其执行以下过程：
-1. 查找一对名为`insertObject:in<Key>AtIndex:`和`removeObjectFrom<Key>AtIndex:`（相当于`NSMutableArray`类的原始方法）的方法，或者名为`insert<Key>:atIndexes:`和`remove<Key>AtIndexes:`（相当于`NSMutableArray`的`insertObjects:atIndexes:`和`removeObjectsAtIndexes:`）的方法。
+1. 查找一对名为`insertObject:in<Key>AtIndex:`和`removeObjectFrom<Key>AtIndex:`（对应于`NSMutableArray`类的原始方法）的方法，或者名为`insert<Key>:atIndexes:`和`remove<Key>AtIndexes:`（对应于`NSMutableArray`的`insertObjects:atIndexes:`和`removeObjectsAtIndexes:`）的方法。
     如果至少存在一对插入和删除方法，则返回一个能够响应`NSMutableArray`消息的代理对象。代理对象随后会将接收到的`NSMutableArray`消息转换为`insertObject:in<Key>AtIndex:`、`removeObjectFrom<Key>AtIndex:`、`insert<Key>:atIndexes:`和`remove<Key>AtIndexes:`消息的某种组合发送给接收`mutableArrayValueForKey:`消息的原始对象。
     当原始对象实现了一个可选的名为`replaceObjectIn<Key>AtIndex:withObject:`或者`replace<Key>AtIndexes:with<Key>:`的替换对象方法时，代理对象会在适当时间使用它们以获得最佳性能。
 
@@ -438,7 +438,7 @@ if (![person validateValue:&name forKey:@"name" error:&error])
 ### 可变有序集合的查找方式
 
 `mutableOrderedSetValueForKey:`的默认实现识别与`valueForKey:`相同的简单访问器方法和有序集合访问器方法，并遵循相同的直接访问实例变量策略。但是，其返回的是一个可变集合代理对象，而`valueForKey:`方法返回的是一个不可变集合代理对象。此外，它还执行以下操作：
-1. 查找一对名为`insertObject:in<Key>AtIndex:`和`removeObjectFrom<Key>AtIndex:`（相当于`NSMutableOrderedSet`类定义的这两个最原始的方法）的方法，或者名为`insert<Key>:atIndexes:`和`remove<Key>AtIndexes:`（相当于`NSMutableOrderedSet`类的`insertObjects:atIndexes:`和`removeObjectsAtIndexes:`）的方法。
+1. 查找一对名为`insertObject:in<Key>AtIndex:`和`removeObjectFrom<Key>AtIndex:`（对应于`NSMutableOrderedSet`类定义的这两个最原始的方法）的方法，或者名为`insert<Key>:atIndexes:`和`remove<Key>AtIndexes:`（对应于`NSMutableOrderedSet`类的`insertObjects:atIndexes:`和`removeObjectsAtIndexes:`）的方法。
     如果至少存在一对插入和删除方法，则返回一个能够响应`NSMutableOrderedSet`消息的代理对象。代理对象随后会将接收到的`NSMutableOrderedSet`消息转换为`insertObject:in<Key>AtIndex:`、`removeObjectFrom<Key>AtIndex:`、`insert<Key>:atIndexes:`和`remove<Key>AtIndexes:`消息的某种组合发送给接收`mutableOrderedSetValueForKey:`消息的原始对象。
     当原始对象实现了一个可选的`replaceObjectIn<Key>AtIndex:withObject:`或者`replace<Key>AtIndexes:with<Key>:`的方法时，代理对象会在适当时间使用它们。
     
@@ -455,7 +455,7 @@ if (![person validateValue:&name forKey:@"name" error:&error])
 ### 可变集合的查找方式
 
 给定一个键参数作为输入，`mutableSetValueForKey:`方法的默认实现为原始对象的名为`<key>`的数组属性返回一个可变代理集合，其会执行以下过程：
-1. 查找一对名为`add<Key>Object:`和`remove<Key>Object:`的方法（相当于`NSMutableSet`的原始方法`addObject:`和`removeObject:`），或者名为`add<Key>:`和`remove<Key>:`的方法（相当于`NSMutableSet`的`unionSet:`和`minusSet:`方法）。如果至少存在一对插入和删除方法，则返回一个能够响应`NSMutableSet`消息的代理对象。代理对象随后会将接收到的`NSMutableSet`消息转换为`add<Key>Object:`、`remove<Key>Object:`、`addObject:`和`removeObject:`消息的某种组合发送给接收`mutableSetValueForKey:`消息的原始对象。
+1. 查找一对名为`add<Key>Object:`和`remove<Key>Object:`的方法（对应于`NSMutableSet`的原始方法`addObject:`和`removeObject:`），或者名为`add<Key>:`和`remove<Key>:`的方法（对应于`NSMutableSet`的`unionSet:`和`minusSet:`方法）。如果至少存在一对插入和删除方法，则返回一个能够响应`NSMutableSet`消息的代理对象。代理对象随后会将接收到的`NSMutableSet`消息转换为`add<Key>Object:`、`remove<Key>Object:`、`addObject:`和`removeObject:`消息的某种组合发送给接收`mutableSetValueForKey:`消息的原始对象。
     当原始对象实现了一个名为`intersect<Key>:`或者`set<Key>:`的方法时，代理对象会在适当时间使用它们以获得最佳性能。
 
 2. 如果`mutableSetValueForKey:`消息的接收者是一个managed object，则查找模式不会像non-managed object那样继续。 有关详细信息，请参看[Core Data Programming Guide](https://developer.apple.com/library/archive/documentation/Cocoa/Conceptual/CoreData/index.html#//apple_ref/doc/uid/TP40001075)。
@@ -694,7 +694,7 @@ withTransactions:(NSArray *)transactionArray {
 }
 ```
 
-- `intersect<Key>:`：此方法接收一个`NSSet`参数，从关系中删除所有不是输入集和集合集公共的对象。 这相当于`NSMutableSet`的`intersectSet:`。例如:
+- `intersect<Key>:`：此方法接收一个`NSSet`参数，从关系中删除所有不是输入集和集合集公共的对象。 这对应于`NSMutableSet`的`intersectSet:`。例如:
 ```
 - (void)intersectEmployees:(NSSet *)otherObjects {
     return [self.employees intersectSet:otherObjects];
