@@ -62,12 +62,12 @@
 
 ### 使用键设置属性值
 
-与getter一样，兼容键值编码的对象也提供了一小组具有默认行为的通用setter：
+与getter一样，兼容键值编码的对象也提供了一组具有默认行为的通用setter：
 - `setValue:forKey:`：将消息接收者的与指定键对应的属性设置为给定值。`setValue:forKey:`方法的默认实现自动解包表示标量和结构体的`NSNumber`和`NSValue`对象，并将它们分配给属性。有关包装和解包语义的详细信息，请参看[表示非对象值](#turn)。如果消息接收对象没有指定的键对应的属性，则该对象会向自身发送`setValue:forUndefinedKey:`消息。`setValue:forUndefinedKey:`方法的默认实现抛出一个`NSUndefinedKeyException`。但是，子类可以重写此方法以自定义方式处理请求。
 - `setValue:forKeyPath:`：将相对于接收者的指定键路径对应的属性设置为给定值。键路径序列中的任何一个不兼容键值编码的对象会收到`setValue:forUndefinedKey:`消息。
 - `setValuesForKeysWithDictionary:`：使用字典键标识属性，使用字典中的设置属性的值。其默认实现会为每个键值对调用`setValue:forKey:`方法，并根据需要使用`nil`替换`NSNull`对象。
 
-在默认实现中，当试图将非对象属性设置为`nil`时，兼容键值编码的对象会向自身发送`setNilValueForKey:`方法。`setNilValueForKey:`方法的默认实现抛出一个`NSInvalidArgumentException`，但是对象可能会覆盖此行为以替换默认值或标记值，如[处理非对象值](#turn)中所述。
+在默认实现中，当试图将非对象属性设置为`nil`时，兼容键值编码的对象会向自身发送`setNilValueForKey:`方法。`setNilValueForKey:`方法的默认实现抛出一个`NSInvalidArgumentException`，但是对象可以覆盖此行为以替换默认值或标记值，如[处理非对象值](#turn)中所述。
 
 
 ### 使用键简化对象访问
@@ -101,14 +101,14 @@
 
 ## 访问集合属性
 
-兼容键值编码的对象以与公开其他类型属性相同的方式公开其To-many relationships类型的属性。可以使用`valueForKey:`和`setValue:forKey:`方法来获取和设置集合对象，就像任何其他对象一样。但是，当想要操纵这些集合的内容时，使用协议定义的可变代理方法通常是最有效的。
+兼容键值编码的对象以与公开其他类型属性相同的方式公开其To-many relationships类型的属性。可以使用`valueForKey:`和`setValue:forKey:`方法来获取和设置集合对象，就像任何其他对象一样。**但是，当想要操纵这些集合的内容时，使用协议定义的可变代理方法通常是最有效的。**
 
 该协议为访问集合对象定义了三种不同的代理方法，每种方法都有一个键和键路径参数：
-- `mutableArrayValueForKey:`和`mutableArrayValueForKeyPath:`：它们返回一个代理对象，其行为类似于`NSMutableArray`对象。
-- `mutableSetValueForKey:`和`mutableSetValueForKeyPath:`：它们返回一个代理对象，其行为类似于`NSMutableSet`对象。
-- `mutableOrderedSetValueForKey:`和`mutableOrderedSetValueForKeyPath:`：它们返回一个代理对象，其行为类似于`NSMutableOrderedSet`对象。
+- `mutableArrayValueForKey:`和`mutableArrayValueForKeyPath:`：它们返回一个代理对象，该代理对象的行为类似于`NSMutableArray`对象。
+- `mutableSetValueForKey:`和`mutableSetValueForKeyPath:`：它们返回一个代理对象，该代理对象的行为类似于`NSMutableSet`对象。
+- `mutableOrderedSetValueForKey:`和`mutableOrderedSetValueForKeyPath:`：它们返回一个代理对象，该代理对象的行为类似于`NSMutableOrderedSet`对象。
 
-当对代理对象执行向其添加对象和从中删除或者替换对象的操作时，协议的默认实现会相应地修改集合对象的底层属性。这比使用`valueForKey:`方法获取不可变的集合对象，根据该集合对象创建一个包含已修改的内容的集合对象，然后使用`setValue:forKey:`方法将其存储回对象更加有效。在许多情况下，它也比直接使用可变属性更有效。这些方法为集合对象中保存的对象提供了保持KVO兼容的额外好处（有关详细信息，请参看[KVO键值观察（Key-Value Observing）](https://www.jianshu.com/p/ab5a36728dfc)）。
+当对代理对象执行向其添加对象和从中删除或者替换对象的操作时，协议的默认实现会相应地修改集合对象。**这比使用`valueForKey:`方法获取不可变的集合对象，根据该集合对象创建一个包含已修改的内容的集合对象，然后使用`setValue:forKey:`方法将其存储回对象更加有效。在许多情况下，它也比直接使用可变集合属性更有效。**这些方法为集合对象中保存的对象提供了保持KVO兼容的额外好处（有关详细信息，请参看[KVO键值观察（Key-Value Observing）](https://www.jianshu.com/p/ab5a36728dfc)）。
 
 
 ## 使用集合运算符
