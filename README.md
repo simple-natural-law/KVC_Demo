@@ -286,7 +286,7 @@ NSArray *collectedPayees = [arrayOfArrays valueForKeyPath:@"@unionOfArrays.payee
 
 ## 表示非对象值
 
-`NSObject`提供的键值编码协议方法的实现同时支持对象属性和非对象属性。默认实现自动在对象参数或者返回值与非对象值属性之间进行转换。这使得即使存储的属性是标量或者结构体，基于键的setter和getter的签名也保持一致。
+`NSObject`提供的键值编码协议方法的实现同时支持对象属性和非对象属性。默认实现自动在对象参数或者返回值与非对象属性之间进行转换。这使得即使存储的属性是标量或者结构体，基于键的setter和getter的签名也保持一致。
 
 当调用协议的其中一个getter（例如`valueForKey:`）时，默认实现将根据[访问器查找方式](#turn)中描述的规则确定特定的为指定键提供值的访问器方法或者实例变量。如果返回值不是对象，则getter使用该值初始化一个`NSNumber`对象（对于标量）或者`NSValue`对象（对于结构体）并返回该值。
 
