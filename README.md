@@ -374,7 +374,7 @@ if (![person validateValue:&name forKey:@"name" error:&error])
 
 ### 自动验证
 
-通常情况下，键值编码协议及其默认实现都不定义任何自动执行验证的机制。但是，可以在适合我们的应用程序时使用验证方法。
+通常情况下，键值编码协议及其默认实现都不会定义任何自动执行验证的机制。但是，可以在适合我们的应用程序时使用验证方法。
 
 某些Cocoa技术在某些情况下会自动执行验证。例如，Core Data会在保存管理对象上下文时自动执行验证（请参看[Core Data Programming Guide](https://developer.apple.com/library/archive/documentation/Cocoa/Conceptual/CoreData/index.html#//apple_ref/doc/uid/TP40001075)）。此外，在macOS中，Cocoa绑定允许我们指定应自动执行验证（有关详细信息，请参看[Cocoa Bindings Programming Topics](https://developer.apple.com/library/archive/documentation/Cocoa/Conceptual/CocoaBindings/CocoaBindings.html#//apple_ref/doc/uid/10000167i)）。
 
