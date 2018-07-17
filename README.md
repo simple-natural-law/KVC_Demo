@@ -654,14 +654,14 @@ withTransactions:(NSArray *)transactionArray {
 }
 ```
 
-- `enumeratorOf<Key>`：此方法返回一个`NSEnumerator`实例，该实例用于迭代关系中的对象。 该方法对应于`NSSet`的`objectEnumerator`方法。关于`NSEnumerator`的更多信息，请参看[Collections Programming Topics](https://developer.apple.com/library/archive/documentation/Cocoa/Conceptual/Collections/Collections.html#//apple_ref/doc/uid/10000034i)中的[Enumeration: Traversing a Collection’s Elements](#turn)。
+- `enumeratorOf<Key>`：此方法返回一个`NSEnumerator`实例，该实例用于迭代集合中的对象。 该方法对应于`NSSet`的`objectEnumerator`方法。关于`NSEnumerator`的更多信息，请参看[Collections Programming Topics](https://developer.apple.com/library/archive/documentation/Cocoa/Conceptual/Collections/Collections.html#//apple_ref/doc/uid/10000034i)中的[Enumeration: Traversing a Collection’s Elements](#turn)。
 ```
 - (NSEnumerator *)enumeratorOfEmployees {
     return [self.employees objectEnumerator];
 }
 ```
 
-- `memberOf<Key>:`：此方法将传递的对象与集合中的内容进行比较，并将匹配对象作为参数返回。如果未找到匹配的对象，则返回`nil`。如果手动实现，通常使用`isEqual:`方法来比较对象。 当底层对象是`NSSet`对象时，可以使用等效的`member:`方法。
+- `memberOf<Key>:`：此方法将传递的对象与集合中的内容进行比较，并将匹配对象作为参数返回。如果未找到匹配的对象，则返回`nil`。如果手动实现，通常使用`isEqual:`方法来比较对象。 当底层集合对象是`NSSet`对象时，可以使用等效的`member:`方法。
 ```
 - (Employee *)memberOfEmployees:(Employee *)anObject {
     return [self.employees member:anObject];
