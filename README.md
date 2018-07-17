@@ -407,28 +407,29 @@ if (![person validateValue:&name forKey:@"name" error:&error])
 
 ### Setter的查找方式
 
-给定键和值参数作为输入，在接收`setValue:forKey:`调用的类实例中，`setValue:forKey:`的默认实现会执行以下过程：
-1. 按顺序依次查找名为`set<Key>:`或者`_set<Key>`的访问器方法。如果存在某个方法，则使用输入的值调用该方法来设置属性值，查找完成。否则，执行第**2**步。
+给定键和值参数作为输入，`setValue:forKey:`方法的默认实现会执行以下过程：
+1. 在`setValue:forKey:`消息的接收对象中按顺序依次查找名为`set<Key>:`或者`_set<Key>`的访问器方法。如果存在某个方法，则使用输入的值调用该方法来设置属性值，查找完成。否则，执行第**2**步。
 
-2. 如果未找到简单的访问器方法，并且实例的类方法`accessInstanceVariablesDirectly`方法返回`YES`，则按顺序依次查找名为`_<key>`、`_is<Key>`、`<key>`或者`is<Key>`的实例变量。如果存在，则直接使用输入的值来设置变量，查找完成。否则，执行第**3**步。
+2. 如果没有找到访问器方法，并且`setValue:forKey:`消息的接收对象的类方法`accessInstanceVariablesDirectly`方法返回`YES`，则按顺序依次查找名为`_<key>`、`_is<Key>`、`<key>`或者`is<Key>`的实例变量。如果存在，则直接使用输入的值来设置实例变量，查找完成。否则，执行第**3**步。
 
-3. 如果未找到访问器方法和实例变量，则调用`setValue:forUndefinedKey:`方法。默认情况下，这会引发异常，但`NSObject`的子类可能会提供特定于键的行为。
+3. 如果没有找到访问器方法和实例变量，则调用`setValue:forUndefinedKey:`方法，查找完成。默认情况下，这会引发异常，但`NSObject`的子类可能会提供特定于键的行为。
 
 
-### 可变数组的查找方式
+### Mutable Array的查找方式
 
-给定键和值参数作为输入，`mutableArrayValueForKey:`的默认实现会为名称为`<key>`的属性返回一个可变代理数组，其执行以下过程：
-1. 查找一对名为`insertObject:in<Key>AtIndex:`和`removeObjectFrom<Key>AtIndex:`（对应于`NSMutableArray`类的原始方法）的方法，或者名为`insert<Key>:atIndexes:`和`remove<Key>AtIndexes:`（对应于`NSMutableArray`的`insertObjects:atIndexes:`和`removeObjectsAtIndexes:`）的方法。如果至少存在一对插入和删除方法，则返回一个能够响应`NSMutableArray`消息的代理对象，查找完成。（代理对象随后会将接收到的`NSMutableArray`消息转换为`insertObject:in<Key>AtIndex:`、`removeObjectFrom<Key>AtIndex:`、`insert<Key>:atIndexes:`和`remove<Key>AtIndexes:`消息的某种组合发送给接收`mutableArrayValueForKey:`消息的原始对象。当原始对象实现了一个可选的名为`replaceObjectIn<Key>AtIndex:withObject:`或者`replace<Key>AtIndexes:with<Key>:`的替换对象方法时，代理对象会在适当时间使用它们以获得最佳性能。）
+给定键和值参数作为输入，`mutableArrayValueForKey:`方法的默认实现为名称为`<key>`的集合属性返回一个可变代理数组，其会执行以下过程：
+1. 在`mutableArrayValueForKey:`消息的接收对象中查找一对名为`insertObject:in<Key>AtIndex:`和`removeObjectFrom<Key>AtIndex:`（对应于`NSMutableArray`类的原始方法）的方法，或者一对名为`insert<Key>:atIndexes:`和`remove<Key>AtIndexes:`（对应于`NSMutableArray`的`insertObjects:atIndexes:`和`removeObjectsAtIndexes:`方法）的方法。如果至少存在一对插入和删除方法，则返回一个能够响应`NSMutableArray`消息的集合代理对象，查找完成。
+> 我们在操作该集合代理对象时，集合代理对象会将接收到的`NSMutableArray`消息转换为`insertObject:in<Key>AtIndex:`、`removeObjectFrom<Key>AtIndex:`、`insert<Key>:atIndexes:`和`remove<Key>AtIndexes:`消息的某种组合发送给`mutableArrayValueForKey:`消息的接收对象。当接收对象实现了一个可选的名为`replaceObjectIn<Key>AtIndex:withObject:`或者`replace<Key>AtIndexes:with<Key>:`的替换对象方法时，集合代理对象会在适当时间使用它们以获得最佳性能。
 
- 2. 如果不存在一对插入和删除方法，会查找名为`set<Key>:`的访问器方法。如果存在该方法，则返回一个能够响应`NSMutableArray`消息的代理对象，查找完成。（该代理对象与第**1**步中返回的代理对象有所不同，其是通过发送`set<Key>:`消息给接收`mutableArrayValueForKey:`消息的原始对象来响应`NSMutableArray`消息的。）
+2. 如果不存在一对插入和删除方法，会查找名为`set<Key>:`的访问器方法。如果存在该方法，则返回一个能够响应`NSMutableArray`消息的集合代理对象，查找完成。
+> 该集合代理对象与第**1**步中返回的集合代理对象有所不同，其是通过发送`set<Key>:`消息给`mutableArrayValueForKey:`消息的接收对象来响应`NSMutableArray`消息的。
 
 > **注意**：第2步中描述的机制比第1步的效率要低得多，因为它可能涉及重复创建新的集合对象而不是修改现有的集合对象。因此，在设计我们自己的兼容键值编码的对象时，通常应该避免使用该机制。
 
-3. 如果可变数组方法和访问器方法都不存在，并且原始对象的`accessInstanceVariablesDirectly`方法返回`YES`，则按顺序依次查找名为`_<key>`或者`<key>`的实例变量。
-    如果存在实例变量，则返回一个代理对象。该代理对象会将其接收到的所有`NSMutableArray`消息转发给实例变量的值，该值通常是`NSMutableArray`或其子类之一的实例。
+3. 如果可变数组方法和访问器方法都不存在，并且`mutableArrayValueForKey:`消息的接收对象的类方法`accessInstanceVariablesDirectly`返回`YES`，则按顺序依次查找名为`_<key>`或者`<key>`的实例变量。如果存在实例变量，则返回一个集合代理对象，查找完成。
+> 我们在操作该集合代理对象时，集合代理对象会将其接收到的所有`NSMutableArray`消息转发给实例变量，该实例变量通常是`NSMutableArray`或其子类之一。
 
-4. 如果以上所有步骤都失败，则返回一个可变集合代理对象。该对象在收到`NSMutableArray`的消息时，向原始对象发送一个`setValue:forUndefinedKey:`消息。
-    `setValue:forUndefinedKey:`的默认实现会引发一个`NSUndefinedKeyException`，但子类可能会覆盖此行为。
+4. 如果以上所有步骤都失败，则返回一个可变集合代理对象。该集合代理对象在收到`NSMutableArray`的消息时，向`mutableArrayValueForKey`消息的接收对象发送一个`setValue:forUndefinedKey:`消息，查找完成。`setValue:forUndefinedKey:`的默认实现会引发一个`NSUndefinedKeyException`，但子类可能会覆盖此行为。
     
 
 ### 可变有序集合的查找方式
