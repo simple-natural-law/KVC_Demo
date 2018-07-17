@@ -598,7 +598,7 @@ range:(NSRange)inRange {
 
 #### 索引集合Mutator
 
-支持可变的to-many relationship需要实现不同的方法组。当提供这些setter方法时，默认实现在响应`mutableArrayValueForKey:`消息时，返回一个行为类似于`NSMutableArray`对象的代理对象，但该代理对象会使用`mutableArrayValueForKey:`消息的接收对象的方法来执行其工作。这通常比直接返回`NSMutableArray`对象更有效，它还使得to-many relationship的内容兼容键值观察成为可能。
+支持有序可变的to-many relationship需要实现不同的方法组。当提供这些setter方法时，默认实现在响应`mutableArrayValueForKey:`消息时，返回一个行为类似于`NSMutableArray`对象的代理对象，但该代理对象会使用`mutableArrayValueForKey:`消息的接收对象的方法来执行其工作。这通常比直接返回`NSMutableArray`对象更有效，它还使得to-many relationship的内容兼容键值观察成为可能。
 
 为了使对象的键值编码兼容一个可变有序的to-many relationship，请实现以下方法：
 - `insertObject:in<Key>AtIndex:`或者`insert<Key>:atIndexes:`：第一个方法接收要插入的对象和该对象的索引，第二个方法接收一个对象数组和包含对象数组中每个对象的索引的`NSIndexSet`对象，只需要其中一种方法。它们类似于`NSMutableArray`的`insertObject:atIndex:`和`insertObjects:atIndexes:`方法。
@@ -670,7 +670,7 @@ withTransactions:(NSArray *)transactionArray {
 
 #### 无序集合Mutators
 
-支持无序访问器的可变的to-many relationship需要实现不同的方法组。当提供这些setter方法时，默认实现在响应`mutableSetValueForKey:`消息时，返回一个行为类似于`NSMutableSet`对象的代理对象，但该代理对象会使用原始对象的方法来执行其工作。这通常比直接返回`NSMutableSet`对象更有效，它还使得to-many relationship的内容兼容键值观察成为可能。
+支持无序可变的to-many relationship需要实现不同的方法组。当提供这些setter方法时，默认实现在响应`mutableSetValueForKey:`消息时，返回一个行为类似于`NSMutableSet`对象的代理对象，但该代理对象会使用`mutableSetValueForKey:`消息的接收对象的方法来执行其工作。这通常比直接返回`NSMutableSet`对象更有效，它还使得to-many relationship的内容兼容键值观察成为可能。
 
 为了使对象的键值编码兼容一个可变无序的to-many relationship，请实现以下方法：
 - `add<Key>Object:`或者`add<Key>:`：这些方法将一个或者一组对象添加到关系中，向关系添加一组项目时，请确保关系中不存在同样的对象。只需要其中一种方法，它们类似于`NSMutableSet`的`addObject:`和`unionSet:`方法。对于`employees`集：
@@ -706,7 +706,7 @@ withTransactions:(NSArray *)transactionArray {
 
 通常情况下，兼容键值编码的对象依赖于键值编码的默认实现来自动包装和解包非对象属性，如[表示非对象值](#turn)中所述。但是，可以覆盖此默认行为。
 
-如果兼容键值编码的对象接收到一个将`nil`作为非对象属性的值的`setValue:forKey:`消息，`setValue:forKey:`的默认实现会发送一个`setNilValueForKey:`消息给原始对象，该消息的默认实现会引发一个`NSInvalidArgumentException`异常。可以覆盖该方法来提供特定的行为。
+如果兼容键值编码的对象接收到一个将`nil`作为非对象属性的值的`setValue:forKey:`消息，`setValue:forKey:`的默认实现会发送一个`setNilValueForKey:`消息给该对象，该消息的默认实现会引发一个`NSInvalidArgumentException`异常。可以覆盖该方法来提供特定的行为。
 
 ```
 - (void)setNilValueForKey:(NSString *)key
