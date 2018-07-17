@@ -387,12 +387,14 @@ if (![person validateValue:&name forKey:@"name" error:&error])
 
 ### Getter的查找方式
 
-给定一个键参数作为输入，在接收`valueForKey:`调用的类实例中，`valueForKey:`的默认实现会执行以下过程：
-1. 在实例中按顺序依次查找名为`get<Key>`、`<key>`、`is<Key>`或者`_<key>`的访问器方法。如果存在某个方法，则调用该方法并跳到第5步。否则，执行第**2**步。
+给定一个键参数作为输入，`valueForKey:`方法的默认实现会执行以下过程：
+1. 在`valueForKey:`消息的接收对象中按顺序依次查找名为`get<Key>`、`<key>`、`is<Key>`或者`_<key>`的访问器方法。如果存在某个方法，则调用该方法并跳到第5步。否则，执行第**2**步。
 
-2. 在实例中查找名为`countOf<Key>`、`objectIn<Key>AtIndex:`（对应于`NSArray`类定义的原始方法）和`<key>AtIndexes:`（对应于`NSArray`的`objectsAtIndexes:`方法）的方法。如果找到第一个方法和其他两个方法中的至少一个，则创建一个响应`NSArray`类所有方法的集合代理对象，并返回该对象，查找完成。否则，执行第**3**步。（代理对象随后将其接收的任何`NSArray`消息转换为`countOf<Key>`、`objectIn<Key>AtIndex:`和`<key>AtIndexes:`消息的某种组合并发送给原始对象。如果原始对象还实现了名为`get<Key>:range:`的可选方法，则代理对象也会在适当时使用该方法。实际上，代理对象与兼容键值编码的对象一起工作，使得底层集合属性的行为就像该属性是`NSArray`一样，即使它并不是。）
+2. 查找名为`countOf<Key>`、`objectIn<Key>AtIndex:`（对应于`NSArray`类定义的原始方法）和`<key>AtIndexes:`（对应于`NSArray`的`objectsAtIndexes:`方法）的方法。如果找到第一个方法和其他两个方法中的至少一个，则创建一个能够响应`NSArray`类所有方法的集合代理对象，并返回该集合代理对象，查找完成。否则，执行第**3**步。
+> 我们在操作该集合代理对象时，集合代理对象会将其接收的任何`NSArray`消息转换为`countOf<Key>`、`objectIn<Key>AtIndex:`和`<key>AtIndexes:`消息的某种组合并发送给`valueForKey:`消息的接收对象。如果接收对象还实现了名为`get<Key>:range:`的可选方法，则集合代理对象也会在适当时使用该方法。实际上，集合代理对象与兼容键值编码的对象一起工作，使得兼容键值编码的对象的集合属性的行为就像该属性是`NSArray`一样，即使它并不是。
     
-3. 在实例中查找名为`countOf<Key>`、`enumeratorOf<Key>`和`memberOf<Key>:`（对应于`NSSet`类定义的原始方法）的三种方法。如果三种方法全部存在，则创建一个响应`NSSet`类所有方法的集合代理对象，并返回该对象，查找完成。否则执行第**4**步。（代理对象随后将其接收的任何`NSSet`消息转换为`countOf<Key>`、`enumeratorOf<Key>`和`memberOf<Key>:`消息的某种组合并发送给原始对象。实际上，代理对象与兼容键值编码的对象一起工作，使得底层集合属性的行为就像该属性是`NSSet`一样，即使它并不是。）
+3. 查找名为`countOf<Key>`、`enumeratorOf<Key>`和`memberOf<Key>:`（对应于`NSSet`类定义的原始方法）的三种方法。如果三种方法全部存在，则创建一个能够响应`NSSet`类所有方法的集合代理对象，并返回该集合代理对象，查找完成。否则执行第**4**步。
+> 我们在操作该集合代理对象时，集合代理对象会将其接收的任何`NSSet`消息转换为`countOf<Key>`、`enumeratorOf<Key>`和`memberOf<Key>:`消息的某种组合并发送给`valueForKey:`消息的接收对象。实际上，集合代理对象与兼容键值编码的对象一起工作，使得兼容键值编码的对象的集合属性的行为就像该属性是`NSSet`一样，即使它并不是。
     
 4. 如果没有找到简单的访问器方法或者集合访问方法组，并且实例的类方法`accessInstanceVariablesDirectly`返回`YES`，则按顺序依次查找名为`_<key>`、`_is<Key>`、`<key>`或者`is<Key>`的实例变量。如果存在，则直接获取实例变量的值并执行第**5**步。否则，执行第**6**步。
 
