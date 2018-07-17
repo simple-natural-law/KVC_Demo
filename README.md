@@ -561,15 +561,15 @@ if (![person validateValue:&name forKey:@"name" error:&error])
 
 ### 访问索引集合
 
-添加索引访问器方法来提供一个计算、检索、添加和替换有序关系中的对象的机制。底层对象通常是`NSArray`或者`NSMutableArray`的实例，但是如果提供集合访问器，则使得实现了这些方法的任何对象像数组一样被操作成为了可能。
+添加索引访问器方法来提供一个计算、检索、添加和替换有序关系中的对象的机制。底层集合属性通常是`NSArray`或者`NSMutableArray`的实例，但是如果提供集合访问器，则使得实现了这些方法的任何集合对象像数组一样被操作成为了可能。
 
 #### 索引集合Getter
 
-对于一个没有默认getter的集合属性，如果提供以下索引集合getter方法，协议的默认实现在响应`valueForKey:`消息时，会返回一个行为类似于`NSArray`的代理对象，但该代理对象调用这些集合方法来执行其工作。
+**对于一个没有默认getter的集合属性，如果提供以下索引集合getter方法，协议的默认实现在响应`valueForKey:`消息时，会返回一个行为类似于`NSArray`的代理对象，但该代理对象调用这些集合方法来执行其工作。**
 
 > **注意**：在现代Objective-C中，编译器默认为每个属性合成一个getter，因此默认实现不会使用本节中的方法创建只读代理（请查看[Getter的查找方式](#turn)）。 可以通过不声明属性（仅依赖于ivar）或将属性声明为`@dynamic`（告知编译器会在运行时提供访问器行为）来解决此问题。 无论哪种方式，编译器都不会提供默认的getter，并且默认实现会使用以下方法。
 
-- `countOf<Key>`：此方法将to-many relationship中的对象数作为`NSUInteger`返回，就像数组的原始方法`count`一样。实际上，当底层属性是一个`NSArray`时，使用`count`方法返回结果。
+- `countOf<Key>`：此方法将to-many relationship中的对象数作为`NSUInteger`返回，就像数组的原始方法`count`一样。实际上，当底层集合属性是一个`NSArray`时，使用`count`方法返回结果。
     例如，对于表示一个银行交易列表的to-many relationship，由名为为`transactions`的`NSArray`支持：
 ```
 - (NSUInteger)countOfTransactions {
@@ -598,7 +598,7 @@ range:(NSRange)inRange {
 
 #### 索引集合Mutator
 
-支持索引访问器的可变的to-many relationship需要实现不同的方法组。当提供这些setter方法时，默认实现在响应`mutableArrayValueForKey:`消息时，返回一个行为类似于`NSMutableArray`对象的代理对象，但该代理对象会使用原始对象的方法来执行其工作。这通常比直接返回`NSMutableArray`对象更有效，它还使得to-many relationship的内容兼容键值观察成为可能。
+支持可变的to-many relationship需要实现不同的方法组。当提供这些setter方法时，默认实现在响应`mutableArrayValueForKey:`消息时，返回一个行为类似于`NSMutableArray`对象的代理对象，但该代理对象会使用`mutableArrayValueForKey:`消息的接收对象的方法来执行其工作。这通常比直接返回`NSMutableArray`对象更有效，它还使得to-many relationship的内容兼容键值观察成为可能。
 
 为了使对象的键值编码兼容一个可变有序的to-many relationship，请实现以下方法：
 - `insertObject:in<Key>AtIndex:`或者`insert<Key>:atIndexes:`：第一个方法接收要插入的对象和该对象的索引，第二个方法接收一个对象数组和包含对象数组中每个对象的索引的`NSIndexSet`对象，只需要其中一种方法。它们类似于`NSMutableArray`的`insertObject:atIndex:`和`insertObjects:atIndexes:`方法。
@@ -641,13 +641,13 @@ withTransactions:(NSArray *)transactionArray {
 
 ### 访问无序集合
 
-添加无序集合访问器方法，以提供一种访问和修改无序关系中的对象的机制。通常，此关系是一个`NSSet`或者`NSMutableSet`对象。 但是，当对象实现了这些访问器时，使得对象像`NSSet`的实例一样操作成为了可能。
+添加无序集合访问器方法，以提供一种访问和修改无序关系中的对象的机制。通常，底层集合属性是一个`NSSet`或者`NSMutableSet`实例。 但是，当集合属性实现了这些访问器时，使得对象像`NSSet`实例一样操作成为了可能。
 
 
 #### 无序集合Getter
 
-当提供以下集合getter方法以返回集合中的对象数、迭代集合对象和测试对象是否已存在于集合中时，在响应`valueForKey`消息时，协议的默认实现返回一个行为类似于`NSSet`的代理对象，但其调用以下集合方法来完成其工作。
-- `countOf<Key>`：此方法返回关系中的项目数，对应于`NSSet`的`count`方法。当底层对象是`NSSet`时，直接调用此方法。例如，名为`employees`的`NSSet`对象包含`Employee`对象：
+当提供以下集合getter方法以返回集合中的对象数、迭代集合对象和测试对象是否已存在于集合中时，响应`valueForKey`消息的协议的默认实现返回一个行为类似于`NSSet`的代理对象，但其调用以下集合方法来完成其工作。
+- `countOf<Key>`：此方法返回集合中的对象数，对应于`NSSet`的`count`方法。当底层集合对象是`NSSet`时，直接调用此方法。例如，名为`employees`的`NSSet`对象包含`Employee`对象：
 ```
 - (NSUInteger)countOfEmployees {
     return [self.employees count];
