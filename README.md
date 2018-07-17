@@ -434,23 +434,23 @@ if (![person validateValue:&name forKey:@"name" error:&error])
 
 ### Mutable Ordered Set的查找方式
 
-`mutableOrderedSetValueForKey:`方法的默认实现会识别与`valueForKey:`方法相同的访问器方法和有序集合访问器方法，并遵循相同的直接访问实例变量策略。但是，其返回的是一个**可变**集合代理对象，而`valueForKey:`方法返回的是一个**不可变**集合代理对象。此外，它还执行以下操作：
+`mutableOrderedSetValueForKey:`方法的默认实现会识别与`valueForKey:`方法相同的访问器方法和mutable ordered set访问器方法，并遵循相同的直接访问实例变量策略。但是，其返回的是一个**可变**集合代理对象，而`valueForKey:`方法返回的是一个**不可变**集合代理对象。此外，它还执行以下操作：
 1. 在接收对象中查找一对名为`insertObject:in<Key>AtIndex:`和`removeObjectFrom<Key>AtIndex:`（对应于`NSMutableOrderedSet`类定义的原始方法）的方法，或者一对名为`insert<Key>:atIndexes:`和`remove<Key>AtIndexes:`（对应于`NSMutableOrderedSet`类的`insertObjects:atIndexes:`和`removeObjectsAtIndexes:`）的方法。如果至少存在一对插入和删除方法，则返回一个能够响应`NSMutableOrderedSet`消息的可变集合代理对象，查找完成。
 > 我们在操作该可变集合代理对象时，可变集合代理对象会将接收到的`NSMutableOrderedSet`消息转换为`insertObject:in<Key>AtIndex:`、`removeObjectFrom<Key>AtIndex:`、`insert<Key>:atIndexes:`和`remove<Key>AtIndexes:`消息的某种组合发送给`mutableOrderedSetValueForKey:`消息的接收对象。当接收对象实现了一个可选的`replaceObjectIn<Key>AtIndex:withObject:`或者`replace<Key>AtIndexes:with<Key>:`的方法时，可变集合代理对象也会在适当时间使用它们。
 
-2. 如果未找到可变有序集合方法，则查找名为`set<Key>:`的访问器。在这种情况下，会返回一个可变集合代理对象，查找完成。
+2. 如果未找到mutable ordered set方法，则查找名为`set<Key>:`的访问器。在这种情况下，会返回一个可变集合代理对象，查找完成。
 > 该可变集合代理对象每次接收到`NSMutableOrderedSet`消息时，会发送一个`set<Key>:`消息给`mutableOrderedSetValueForKey:`消息的接收对象。
 
 > **注意**：第2步中描述的机制比第1步的效率要低得多，因为它可能涉及重复创建新的集合对象而不是修改现有的集合对象。因此，在设计我们自己的兼容键值编码的对象时，通常应该避免使用该机制。
 
-3. 如果可变有序集合方法和访问器方法都不存在，并且`mutableOrderedSetValueForKey:`消息的接收对象的类方法`accessInstanceVariablesDirectly`返回`YES`，则按顺序依次查找名为`_<key>`或者`<key>`的实例变量。如果存在实例变量，则返回一个可变集合代理对象，查找完成。
+3. 如果mutable ordered set方法和访问器方法都不存在，并且`mutableOrderedSetValueForKey:`消息的接收对象的类方法`accessInstanceVariablesDirectly`返回`YES`，则按顺序依次查找名为`_<key>`或者`<key>`的实例变量。如果存在实例变量，则返回一个可变集合代理对象，查找完成。
 > 该可变集合代理对象会将其接收到的所有`NSMutableOrderedSet`消息转发给实例变量，该实例变量通常是`NSMutableOrderedSet`或其子类之一。
 
 4. 如果以上所有步骤都失败，则返回一个可变集合代理对象，查找完成。
 > 该可变集合代理对象在收到`NSMutableOrderedSet`消息时，向`mutableOrderedSetValueForKey:`消息的接收对象发送一个`setValue:forUndefinedKey:`消息。`setValue:forUndefinedKey:`的默认实现会引发一个`NSUndefinedKeyException`，但子类可能会覆盖此行为。
 
 
-### 可变集合的查找方式
+### Mutable Set的查找方式
 
 给定一个键参数作为输入，`mutableSetValueForKey:`方法的默认实现为原始对象的名为`<key>`的数组属性返回一个可变代理集合，其会执行以下过程：
 1. 查找一对名为`add<Key>Object:`和`remove<Key>Object:`的方法（对应于`NSMutableSet`的原始方法`addObject:`和`removeObject:`），或者名为`add<Key>:`和`remove<Key>:`的方法（对应于`NSMutableSet`的`unionSet:`和`minusSet:`方法）。如果至少存在一对插入和删除方法，则返回一个能够响应`NSMutableSet`消息的代理对象。代理对象随后会将接收到的`NSMutableSet`消息转换为`add<Key>Object:`、`remove<Key>Object:`、`addObject:`和`removeObject:`消息的某种组合发送给接收`mutableSetValueForKey:`消息的原始对象。
