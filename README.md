@@ -1,4 +1,4 @@
-# KVC键值编码（Key-Value Coding）
+# KVC
 
 
 ## 关于键值编码
@@ -108,7 +108,7 @@
 - `mutableSetValueForKey:`和`mutableSetValueForKeyPath:`：它们返回一个代理对象，该代理对象的行为类似于`NSMutableSet`对象。
 - `mutableOrderedSetValueForKey:`和`mutableOrderedSetValueForKeyPath:`：它们返回一个代理对象，该代理对象的行为类似于`NSMutableOrderedSet`对象。
 
-当对代理对象执行向其添加对象和从中删除或者替换对象的操作时，协议的默认实现会相应地修改集合对象。**这比使用`valueForKey:`方法获取不可变的集合对象，根据该集合对象创建一个包含已修改的内容的集合对象，然后使用`setValue:forKey:`方法将其存储回对象更加有效。在许多情况下，它也比直接使用可变集合属性更有效。**这些方法为集合对象中保存的对象提供了保持KVO兼容的额外好处（有关详细信息，请参看[KVO键值观察（Key-Value Observing）](https://www.jianshu.com/p/ab5a36728dfc)）。
+当对代理对象执行向其添加对象和从中删除或者替换对象的操作时，协议的默认实现会相应地修改集合对象。**这比使用`valueForKey:`方法获取不可变的集合对象，根据该集合对象创建一个包含已修改的内容的集合对象，然后使用`setValue:forKey:`方法将其存储回对象更加有效。在许多情况下，它也比直接使用可变集合属性更有效。**这些方法为集合对象中保存的对象提供了保持KVO兼容的额外好处（有关详细信息，请参看[KVO](https://www.jianshu.com/p/ab5a36728dfc)）。
 
 
 ## 使用集合运算符
@@ -551,7 +551,7 @@ if (![person validateValue:&name forKey:@"name" error:&error])
 当使用标准命名约定来创建访问器和实例变量时，键值编码协议的默认实现可以定位到它们以响应键值编码消息。对于表示to-many relationships（请看[访问对象属性](#turn)中的描述）的集合对象，情况和其他属性一样。但是，如果实现了集合访问器，而不是集合属性的基本访问器，则可以：
 - 与`NSArray`和`NSSet`以外的集合类建立to-many relationships。在对象中实现集合方法时，getter的默认实现返回一个代理对象，代理对象会调用这些集合方法来响应它接收到的`NSArray`和`NSSet`消息。底层集合属性不必是`NSArray`和`NSSet`的实例，因为代理对象会使用这些集合方法来提供预期的行为。
 - 在改变to-many relationships的内容时，提供更好的性能。协议的默认实现会使用集合方法来改变属性，而不是使用基本的setter重复创建新的集合对象来响应每个更改。
-- 为对象的集合属性的内容提供键值观察兼容的访问。有关键值观察的更多信息，请参看[KVO键值观察（Key-Value Observing）](https://www.jianshu.com/p/ab5a36728dfc)。
+- 为对象的集合属性的内容提供键值观察兼容的访问。有关键值观察的更多信息，请参看[KVO](https://www.jianshu.com/p/ab5a36728dfc)。
 
 可以实现两类集合访问器中的一种，具体取决于是希望关系的行为类似于一个索引的、有序的集合（如`NSArray`对象），还是一个无序的、唯一的集合（如`NSSet`对象）。在任何一种情况下，都要至少实现一组方法来支持对属性的读取访问，然后额外添加一组方法来使集合的内容的突变成为可能。
 

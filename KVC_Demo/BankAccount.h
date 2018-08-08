@@ -15,6 +15,6 @@
 
 @property (nonatomic) NSNumber *currentBalance;              // An attribute
 @property (nonatomic) Person *owner;                         // A to-one relation
-@property (nonatomic) NSMutableArray<Transaction *> *transactions; // A to-many relation
+@property (nonatomic) NSArray<Transaction *> *transactions; // A to-many relation
 
 @end
